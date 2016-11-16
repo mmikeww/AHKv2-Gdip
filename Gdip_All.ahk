@@ -217,7 +217,7 @@ SetStretchBltMode(hdc, iStretchMode:=4)
 
 SetImage(hwnd, hBitmap)
 {
-	SendMessage, 0x172, 0x0, hBitmap,, ahk_id %hwnd%
+	SendMessage, 0x172, 0x0, %hBitmap%,, ahk_id %hwnd%
 	E := ErrorLevel
 	DeleteObject(E)
 	return E
@@ -322,7 +322,7 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 	}
 	else if (Screen&1 != "")
 	{
-		Sysget, M, Monitor, %Screen%
+		MonitorGet, %Screen%, MLeft, MTop, MRight, MBottom
 		x := MLeft, y := MTop, w := MRight-MLeft, h := MBottom-MTop
 	}
 	else
@@ -702,11 +702,11 @@ Gdip_LibrarySubVersion()
 
 Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate:=0)
 {
-	Static FName = "ObjRelease"
+	Static FName := "ObjRelease"
 	
 	if !BRAFromMemIn
 		return -1
-	Loop, Parse, BRAFromMemIn, `n
+	Loop, Parse, %BRAFromMemIn%, `n
 	{
 		if (A_Index = 1)
 		{
@@ -1470,8 +1470,8 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	
-	SplitPath, sOutput,,, Extension
-	if Extension not in BMP,DIB,RLE,JPG,JPEG,JPE,JFIF,GIF,TIF,TIFF,PNG
+	SplitPath, %sOutput%,,, Extension
+	if !RegExMatch(Extension, "^(?i:BMP|DIB|RLE|JPG|JPEG|JPE|JFIF|GIF|TIF|TIFF|PNG)$")
 		return -1
 	Extension := "." Extension
 
@@ -1513,7 +1513,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 	if (Quality != 75)
 	{
 		Quality := (Quality < 0) ? 0 : (Quality > 100) ? 100 : Quality
-		if Extension in .JPG,.JPEG,.JPE,.JFIF
+		if RegExMatch(Extension, "^\.(?i:JPG|JPEG|JPE|JFIF)$")
 		{
 			DllCall("gdiplus\GdipGetEncoderParameterListSize", Ptr, pBitmap, Ptr, pCodec, "uint*", nSize)
 			VarSetCapacity(EncoderParameters, nSize, 0)
@@ -1699,14 +1699,14 @@ Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	, PtrA := A_PtrSize ? "UPtr*" : "UInt*"
 	
-	SplitPath, sFile,,, ext
-	if ext in exe,dll
+	SplitPath, %sFile%,,, ext
+	if RegExMatch(Extension, "^(?i:exe|dll)$")
 	{
 		Sizes := IconSize ? IconSize : 256 "|" 128 "|" 64 "|" 48 "|" 32 "|" 16
 		BufSize := 16 + (2*(A_PtrSize ? A_PtrSize : 4))
 		
 		VarSetCapacity(buf, BufSize, 0)
-		Loop, Parse, Sizes, |
+		Loop, Parse, %Sizes%, |
 		{
 			DllCall("PrivateExtractIcons", "str", sFile, "int", IconNumber-1, "int", A_LoopField, "int", A_LoopField, PtrA, hIcon, PtrA, 0, "uint", 1, "uint", 0)
 			
@@ -2091,14 +2091,14 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 		return -1
 
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
-	Loop, Parse, Styles, |
+	Loop, Parse, %Styles%, |
 	{
 		if RegExMatch(Options, "\b" A_loopField)
 		Style |= (A_LoopField != "StrikeOut") ? (A_Index-1) : 8
 	}
   
 	Align := 0, Alignments := "Near|Left|Centre|Center|Far|Right"
-	Loop, Parse, Alignments, |
+	Loop, Parse, %Alignments%, |
 	{
 		if RegExMatch(Options, "\b" A_loopField)
 			Align |= A_Index//2.1      ; 0|0|1|1|2|2
@@ -2544,7 +2544,7 @@ Gdip_PixelateBitmap(pBitmap, ByRef pBitmapOut, BlockSize)
 	if (!PixelateBitmap)
 	{
 		if A_PtrSize != 8 ; x86 machine code
-		MCode_PixelateBitmap =
+		MCode_PixelateBitmap := "
 		(LTrim Join
 		558BEC83EC3C8B4514538B5D1C99F7FB56578BC88955EC894DD885C90F8E830200008B451099F7FB8365DC008365E000894DC88955F08945E833FF897DD4
 		397DE80F8E160100008BCB0FAFCB894DCC33C08945F88945FC89451C8945143BD87E608B45088D50028BC82BCA8BF02BF2418945F48B45E02955F4894DC4
@@ -2568,9 +2568,9 @@ Gdip_PixelateBitmap(pBitmap, ByRef pBitmapOut, BlockSize)
 		451C99F7F989451CEB0389751C3BCE740B8B45FC99F7F98945FCEB038975FC3BCE740B8B45F899F7F98945F8EB038975F88975083975EC7E63EB0233F639
 		75F07E4F8B4DD88B75E80FAFCB034D080FAFF30FAF4D188B450C8D500203CA8D0CB18BF08BF82BF22BFA2BC28B55F08955108A551488540E038A551C8811
 		8A55FC88540F018A55F888140883C104FF4D1075DFFF45088B45083B45EC7C9F5F5E33C05BC9C21800
-		)
+		)"
 		else ; x64 machine code
-		MCode_PixelateBitmap =
+		MCode_PixelateBitmap := "
 		(LTrim Join
 		4489442418488954241048894C24085355565741544155415641574883EC28418BC1448B8C24980000004C8BDA99488BD941F7F9448BD0448BFA8954240C
 		448994248800000085C00F8E9D020000418BC04533E4458BF299448924244C8954241041F7F933C9898C24980000008BEA89542404448BE889442408EB05
@@ -2595,7 +2595,7 @@ Gdip_PixelateBitmap(pBitmap, ByRef pBitmapOut, BlockSize)
 		F7F9448BD8EB034533DB85C9740A8BC399F7F9448BD0EB034533D285C9740A8BC799F7F9448BC0EB034533C033D24585FF7E4E4585ED7E42418BCC8BC541
 		0FAFC903CA0FAF8C2490000000410FAFC18D04814863C8488B442478488D440102418BCD40887001448818448850FF448840FE4883C00448FFC975E8FFC2
 		413BD77CB233C04883C428415F415E415D415C5F5E5D5BC3
-		)
+		)"
 		
 		VarSetCapacity(PixelateBitmap, StrLen(MCode_PixelateBitmap)//2)
 		Loop % StrLen(MCode_PixelateBitmap)//2		;%
@@ -2671,7 +2671,7 @@ Gdip_BFromARGB(ARGB)
 StrGetB(Address, Length:=-1, Encoding:=0)
 {
 	; Flexible parameter handling:
-	if Length is not integer
+	if Length is not "integer"
 	Encoding := Length,  Length := -1
 
 	; Check for obvious errors.
@@ -2679,10 +2679,10 @@ StrGetB(Address, Length:=-1, Encoding:=0)
 		return
 
 	; Ensure 'Encoding' contains a numeric identifier.
-	if Encoding = UTF-16
-		Encoding = 1200
-	else if Encoding = UTF-8
-		Encoding = 65001
+	if (Encoding = "UTF-16")
+		Encoding := 1200
+	else if (Encoding = "UTF-8")
+		Encoding := 65001
 	else if SubStr(Encoding,1,2)="CP"
 		Encoding := SubStr(Encoding,3)
 
@@ -2694,13 +2694,13 @@ StrGetB(Address, Length:=-1, Encoding:=0)
 		VarSetCapacity(String, Length)
 		DllCall("lstrcpyn", "str", String, "uint", Address, "int", Length + 1)
 	}
-	else if Encoding = 1200 ; UTF-16
+	else if (Encoding = 1200) ; UTF-16
 	{
 		char_count := DllCall("WideCharToMultiByte", "uint", 0, "uint", 0x400, "uint", Address, "int", Length, "uint", 0, "uint", 0, "uint", 0, "uint", 0)
 		VarSetCapacity(String, char_count)
 		DllCall("WideCharToMultiByte", "uint", 0, "uint", 0x400, "uint", Address, "int", Length, "str", String, "int", char_count, "uint", 0, "uint", 0)
 	}
-	else if Encoding is integer
+	else if Encoding is "integer"
 	{
 		; Convert from target encoding to UTF-16 then to the active code page.
 		char_count := DllCall("MultiByteToWideChar", "uint", Encoding, "uint", 0, "uint", Address, "int", Length, "uint", 0, "int", 0)
