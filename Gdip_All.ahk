@@ -327,8 +327,8 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 	}
 	else
 	{
-		StringSplit, S, Screen, |
-		x := S1, y := S2, w := S3, h := S4
+		S := StrSplit(Screen, "|")
+		x := S[1], y := S[2], w := S[3], h := S[4]
 	}
 
 	if (x = "") || (y = "") || (w = "") || (h = "")
@@ -710,21 +710,21 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate:=0)
 	{
 		if (A_Index = 1)
 		{
-			StringSplit, Header, A_LoopField, |
-			if (Header0 != 4 || Header2 != "BRA!")
+			Header := StrSplit(A_LoopField, "|")
+			if (Header.Length() != 4 || Header[2] != "BRA!")
 				return -2
 		}
 		else if (A_Index = 2)
 		{
-			StringSplit, Info, A_LoopField, |
-			if (Info0 != 3)
+			Info := StrSplit(A_LoopField, "|")
+			if (Info.Length() != 3)
 				return -3
 		}
 		else
 			break
 	}
 	if !Alternate
-		StringReplace, File, File, \, \\, All
+		File := StrReplace(File, "\", "\\")                
 	RegExMatch(BRAFromMemIn, "mi`n)^" (Alternate ? File "\|.+?\|(\d+)\|(\d+)" : "\d+\|" File "\|(\d+)\|(\d+)") "$", FileInfo)
 	if !FileInfo
 		return -4
@@ -959,14 +959,14 @@ Gdip_DrawLine(pGraphics, pPen, x1, y1, x2, y2)
 Gdip_DrawLines(pGraphics, pPen, Points)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
-	StringSplit, Points, Points, |
-	VarSetCapacity(PointF, 8*Points0)   
-	Loop, %Points0%
+	Points := StrSplit(Points, "|")
+	VarSetCapacity(PointF, 8*Points.Length())   
+	Loop, % Points.Length()
 	{
-		StringSplit, Coord, Points%A_Index%, `,
-		NumPut(Coord1, PointF, 8*(A_Index-1), "float"), NumPut(Coord2, PointF, (8*(A_Index-1))+4, "float")
+		Coord := StrSplit(Points[A_Index], ",")
+		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
-	return DllCall("gdiplus\GdipDrawLines", Ptr, pGraphics, Ptr, pPen, Ptr, &PointF, "int", Points0)
+	return DllCall("gdiplus\GdipDrawLines", Ptr, pGraphics, Ptr, pPen, Ptr, &PointF, "int", Points.Length())
 }
 
 ;#####################################################################################
@@ -1050,14 +1050,14 @@ Gdip_FillPolygon(pGraphics, pBrush, Points, FillMode:=0)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	
-	StringSplit, Points, Points, |
-	VarSetCapacity(PointF, 8*Points0)   
-	Loop, %Points0%
+	Points := StrSplit(Points, "|")
+	VarSetCapacity(PointF, 8*Points.Length())   
+	Loop, % Points.Length()
 	{
-		StringSplit, Coord, Points%A_Index%, `,
-		NumPut(Coord1, PointF, 8*(A_Index-1), "float"), NumPut(Coord2, PointF, (8*(A_Index-1))+4, "float")
+		Coord := StrSplit(Points[A_Index], ",")
+		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}   
-	return DllCall("gdiplus\GdipFillPolygon", Ptr, pGraphics, Ptr, pBrush, Ptr, &PointF, "int", Points0, "int", FillMode)
+	return DllCall("gdiplus\GdipFillPolygon", Ptr, pGraphics, Ptr, pBrush, Ptr, &PointF, "int", Points.Length(), "int", FillMode)
 }
 
 ;#####################################################################################
@@ -1175,12 +1175,12 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	
-	StringSplit, Points, Points, |
-	VarSetCapacity(PointF, 8*Points0)   
-	Loop, %Points0%
+	Points := StrSplit(Points, "|")
+	VarSetCapacity(PointF, 8*Points.Length())   
+	Loop, % Points.Length()
 	{
-		StringSplit, Coord, Points%A_Index%, `,
-		NumPut(Coord1, PointF, 8*(A_Index-1), "float"), NumPut(Coord2, PointF, (8*(A_Index-1))+4, "float")
+		Coord := StrSplit(Points[A_Index], ",")
+		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
 
 	if (Matrix&1 = "")
@@ -1315,10 +1315,10 @@ Gdip_SetImageAttributesColorMatrix(Matrix)
 	
 	VarSetCapacity(ColourMatrix, 100, 0)
 	Matrix := RegExReplace(RegExReplace(Matrix, "^[^\d-\.]+([\d\.])", "$1", "", 1), "[^\d-\.]+", "|")
-	StringSplit, Matrix, Matrix, |
+	Matrix := StrSplit(Matrix, "|")
 	Loop, 25
 	{
-		Matrix := (Matrix%A_Index% != "") ? Matrix%A_Index% : Mod(A_Index-1, 6) ? 0 : 1
+		Matrix := (Matrix[A_Index] != "") ? Matrix[A_Index] : Mod(A_Index-1, 6) ? 0 : 1
 		NumPut(Matrix, ColourMatrix, (A_Index-1)*4, "float")
 	}
 	DllCall("gdiplus\GdipCreateImageAttributes", A_PtrSize ? "UPtr*" : "uint*", ImageAttr)
@@ -2128,16 +2128,16 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 
 	if vPos
 	{
-		StringSplit, ReturnRC, ReturnRC, |
+		ReturnRC := StrSplit(ReturnRC, "|")
 		
 		if (vPos = "vCentre") || (vPos = "vCenter")
-			ypos += (Height-ReturnRC4)//2
+			ypos += (Height-ReturnRC[4])//2
 		else if (vPos = "Top") || (vPos = "Up")
 			ypos := 0
 		else if (vPos = "Bottom") || (vPos = "Down")
-			ypos := Height-ReturnRC4
+			ypos := Height-ReturnRC[4]
 		
-		CreateRectF(RC, xpos, ypos, Width, ReturnRC4)
+		CreateRectF(RC, xpos, ypos, Width, ReturnRC[4])
 		ReturnRC := Gdip_MeasureString(pGraphics, Text, hFont, hFormat, RC)
 	}
 
@@ -2294,15 +2294,15 @@ Gdip_AddPathPolygon(Path, Points)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	
-	StringSplit, Points, Points, |
-	VarSetCapacity(PointF, 8*Points0)   
-	Loop, %Points0%
+	Points := StrSplit(Points, "|")
+	VarSetCapacity(PointF, 8*Points.Length())   
+	Loop, % Points.Length()
 	{
-		StringSplit, Coord, Points%A_Index%, `,
-		NumPut(Coord1, PointF, 8*(A_Index-1), "float"), NumPut(Coord2, PointF, (8*(A_Index-1))+4, "float")
+		Coord := StrSplit(Points[A_Index], ",")
+		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}   
 
-	return DllCall("gdiplus\GdipAddPathPolygon", Ptr, Path, Ptr, &PointF, "int", Points0)
+	return DllCall("gdiplus\GdipAddPathPolygon", Ptr, Path, Ptr, &PointF, "int", Points.Length())
 }
 
 Gdip_DeletePath(Path)
