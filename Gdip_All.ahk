@@ -1486,7 +1486,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 	
 	If (A_IsUnicode){
 		StrGet_Name := "StrGet"
-		Loop, %nCount%
+		Loop, % nCount
 		{
 			sString := %StrGet_Name%(NumGet(ci, (idx := (48+7*A_PtrSize)*(A_Index-1))+32+3*A_PtrSize), "UTF-16")
 			if !InStr(sString, "*" Extension)
@@ -1496,7 +1496,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 			break
 		}
 	} else {
-		Loop, %nCount%
+		Loop, % nCount
 		{
 			Location := NumGet(ci, 76*(A_Index-1)+44)
 			nSize := DllCall("WideCharToMultiByte", "uint", 0, "uint", 0, "uint", Location, "int", -1, "uint", 0, "int",  0, "uint", 0, "uint", 0)
