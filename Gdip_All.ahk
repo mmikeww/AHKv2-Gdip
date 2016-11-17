@@ -2676,7 +2676,7 @@ Gdip_BFromARGB(ARGB)
 StrGetB(Address, Length:=-1, Encoding:=0)
 {
 	; Flexible parameter handling:
-	if Length is not "integer"
+	if !IsInteger(Length)
 	Encoding := Length,  Length := -1
 
 	; Check for obvious errors.
@@ -2705,7 +2705,7 @@ StrGetB(Address, Length:=-1, Encoding:=0)
 		VarSetCapacity(String, char_count)
 		DllCall("WideCharToMultiByte", "uint", 0, "uint", 0x400, "uint", Address, "int", Length, "str", String, "int", char_count, "uint", 0, "uint", 0)
 	}
-	else if Encoding is "integer"
+	else if IsInteger(Encoding)
 	{
 		; Convert from target encoding to UTF-16 then to the active code page.
 		char_count := DllCall("MultiByteToWideChar", "uint", Encoding, "uint", 0, "uint", Address, "int", Length, "uint", 0, "int", 0)
@@ -2716,3 +2716,16 @@ StrGetB(Address, Length:=-1, Encoding:=0)
 	
 	return String
 }
+
+
+;#####################################################################################
+; in AHK v1: uses normal 'if var is' command
+; in AHK v2: all if's are expression-if, so the Integer variable is dereferenced to the string
+;#####################################################################################
+IsInteger(Var) {
+   Static Integer := "Integer"
+   If Var Is Integer
+      Return True
+   Return False
+}
+
