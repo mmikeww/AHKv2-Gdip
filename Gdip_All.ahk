@@ -709,7 +709,7 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate:=0)
 	
 	if !BRAFromMemIn
 		return -1
-	Loop, Parse, %BRAFromMemIn%, `n
+	Loop, Parse, % BRAFromMemIn, `n
 	{
 		if (A_Index = 1)
 		{
@@ -1474,7 +1474,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	
-	SplitPath, %sOutput%,,, Extension
+	SplitPath, % sOutput,,, Extension
 	if !RegExMatch(Extension, "^(?i:BMP|DIB|RLE|JPG|JPEG|JPE|JFIF|GIF|TIF|TIFF|PNG)$")
 		return -1
 	Extension := "." Extension
@@ -1703,14 +1703,14 @@ Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	, PtrA := A_PtrSize ? "UPtr*" : "UInt*"
 	
-	SplitPath, %sFile%,,, ext
+	SplitPath, % sFile,,, ext
 	if RegExMatch(Extension, "^(?i:exe|dll)$")
 	{
 		Sizes := IconSize ? IconSize : 256 "|" 128 "|" 64 "|" 48 "|" 32 "|" 16
 		BufSize := 16 + (2*(A_PtrSize ? A_PtrSize : 4))
 		
 		VarSetCapacity(buf, BufSize, 0)
-		Loop, Parse, %Sizes%, |
+		Loop, Parse, % Sizes, |
 		{
 			DllCall("PrivateExtractIcons", "str", sFile, "int", IconNumber-1, "int", A_LoopField, "int", A_LoopField, PtrA, hIcon, PtrA, 0, "uint", 1, "uint", 0)
 			
@@ -2096,14 +2096,14 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 		return -1
 
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
-	Loop, Parse, %Styles%, |
+	Loop, Parse, % Styles, |
 	{
 		if RegExMatch(Options, "\b" A_loopField)
 		Style |= (A_LoopField != "StrikeOut") ? (A_Index-1) : 8
 	}
   
 	Align := 0, Alignments := "Near|Left|Centre|Center|Far|Right"
-	Loop, Parse, %Alignments%, |
+	Loop, Parse, % Alignments, |
 	{
 		if RegExMatch(Options, "\b" A_loopField)
 			Align |= A_Index//2.1      ; 0|0|1|1|2|2
