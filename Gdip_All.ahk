@@ -728,13 +728,14 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate:=0)
 	}
 	if !Alternate
 		File := StrReplace(File, "\", "\\")                
-	RegExMatch(BRAFromMemIn, "mi`n)^" (Alternate ? File "\|.+?\|(\d+)\|(\d+)" : "\d+\|" File "\|(\d+)\|(\d+)") "$", FileInfo)
+	pattern_opts := (A_AhkVersion < "2") ? "miO`n)" : "mi`n)"
+	RegExMatch(BRAFromMemIn, pattern_opts "^" (Alternate ? File "\|.+?\|(\d+)\|(\d+)" : "\d+\|" File "\|(\d+)\|(\d+)") "$", FileInfo)
 	if !FileInfo
 		return -4
 	
-	hData := DllCall("GlobalAlloc", "uint", 2, Ptr, FileInfo2, Ptr)
+	hData := DllCall("GlobalAlloc", "uint", 2, Ptr, FileInfo[2], Ptr)
 	pData := DllCall("GlobalLock", Ptr, hData, Ptr)
-	DllCall("RtlMoveMemory", Ptr, pData, Ptr, &BRAFromMemIn+Info2+FileInfo1, Ptr, FileInfo2)
+	DllCall("RtlMoveMemory", Ptr, pData, Ptr, &BRAFromMemIn+Info[2]+FileInfo[1], Ptr, FileInfo[2])
 	DllCall("GlobalUnlock", Ptr, hData)
 	DllCall("ole32\CreateStreamOnHGlobal", Ptr, hData, "int", 1, A_PtrSize ? "UPtr*" : "UInt*", pStream)
 	DllCall("gdiplus\GdipCreateBitmapFromStream", Ptr, pStream, A_PtrSize ? "UPtr*" : "UInt*", pBitmap)
@@ -2076,21 +2077,22 @@ Gdip_DeleteMatrix(Matrix)
 Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:="", Measure:=0)
 {
 	IWidth := Width, IHeight:= Height
-	
-	RegExMatch(Options, "i)X([\-\d\.]+)(p*)", xpos)
-	RegExMatch(Options, "i)Y([\-\d\.]+)(p*)", ypos)
-	RegExMatch(Options, "i)W([\-\d\.]+)(p*)", Width)
-	RegExMatch(Options, "i)H([\-\d\.]+)(p*)", Height)
-	RegExMatch(Options, "i)C(?!(entre|enter))([a-f\d]+)", Colour)
-	RegExMatch(Options, "i)Top|Up|Bottom|Down|vCentre|vCenter", vPos)
-	RegExMatch(Options, "i)NoWrap", NoWrap)
-	RegExMatch(Options, "i)R(\d)", Rendering)
-	RegExMatch(Options, "i)S(\d+)(p*)", Size)
 
-	if !Gdip_DeleteBrush(Gdip_CloneBrush(Colour2))
-		PassBrush := 1, pBrush := Colour2
+	pattern_opts := (A_AhkVersion < "2") ? "iO)" : "i)"
+	RegExMatch(Options, pattern_opts "X([\-\d\.]+)(p*)", xpos)
+	RegExMatch(Options, pattern_opts "Y([\-\d\.]+)(p*)", ypos)
+	RegExMatch(Options, pattern_opts "W([\-\d\.]+)(p*)", Width)
+	RegExMatch(Options, pattern_opts "H([\-\d\.]+)(p*)", Height)
+	RegExMatch(Options, pattern_opts "C(?!(entre|enter))([a-f\d]+)", Colour)
+	RegExMatch(Options, pattern_opts "Top|Up|Bottom|Down|vCentre|vCenter", vPos)
+	RegExMatch(Options, pattern_opts "NoWrap", NoWrap)
+	RegExMatch(Options, pattern_opts "R(\d)", Rendering)
+	RegExMatch(Options, pattern_opts "S(\d+)(p*)", Size)
+
+	if Colour && !Gdip_DeleteBrush(Gdip_CloneBrush(Colour[2]))
+		PassBrush := 1, pBrush := Colour[2]
 	
-	if !(IWidth && IHeight) && (xpos2 || ypos2 || Width2 || Height2 || Size2)
+	if !(IWidth && IHeight) && ((xpos && xpos[2]) || (ypos && ypos[2]) || (Width && Width[2]) || (Height && Height[2]) || (Size && Size[2]))
 		return -1
 
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
@@ -2107,14 +2109,14 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 			Align |= A_Index//2.1      ; 0|0|1|1|2|2
 	}
 
-	xpos := (xpos1 != "") ? xpos2 ? IWidth*(xpos1/100) : xpos1 : 0
-	ypos := (ypos1 != "") ? ypos2 ? IHeight*(ypos1/100) : ypos1 : 0
-	Width := Width1 ? Width2 ? IWidth*(Width1/100) : Width1 : IWidth
-	Height := Height1 ? Height2 ? IHeight*(Height1/100) : Height1 : IHeight
+	xpos := (xpos && (xpos[1] != "")) ? xpos[2] ? IWidth*(xpos[1]/100) : xpos[1] : 0
+	ypos := (ypos && (ypos[1] != "")) ? ypos[2] ? IHeight*(ypos[1]/100) : ypos[1] : 0
+	Width := (Width && Width[1]) ? Width[2] ? IWidth*(Width[1]/100) : Width[1] : IWidth
+	Height := (Height && Height[1]) ? Height[2] ? IHeight*(Height[1]/100) : Height[1] : IHeight
 	if !PassBrush
-		Colour := "0x" (Colour2 ? Colour2 : "ff000000")
-	Rendering := ((Rendering1 >= 0) && (Rendering1 <= 5)) ? Rendering1 : 4
-	Size := (Size1 > 0) ? Size2 ? IHeight*(Size1/100) : Size1 : 12
+		Colour := "0x" (Colour && Colour[2] ? Colour[2] : "ff000000")
+	Rendering := (Rendering && (Rendering[1] >= 0) && (Rendering[1] <= 5)) ? Rendering[1] : 4
+	Size := (Size && (Size[1] > 0)) ? Size[2] ? IHeight*(Size[1]/100) : Size[1] : 12
 
 	hFamily := Gdip_FontFamilyCreate(Font)
 	hFont := Gdip_FontCreate(hFamily, Size, Style)
@@ -2133,11 +2135,11 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 	{
 		ReturnRC := StrSplit(ReturnRC, "|")
 		
-		if (vPos = "vCentre") || (vPos = "vCenter")
+		if (vPos[0] = "vCentre") || (vPos[0] = "vCenter")
 			ypos += (Height-ReturnRC[4])//2
-		else if (vPos = "Top") || (vPos = "Up")
+		else if (vPos[0] = "Top") || (vPos[0] = "Up")
 			ypos := 0
-		else if (vPos = "Bottom") || (vPos = "Down")
+		else if (vPos[0] = "Bottom") || (vPos[0] = "Down")
 			ypos := Height-ReturnRC[4]
 		
 		CreateRectF(RC, xpos, ypos, Width, ReturnRC[4])
