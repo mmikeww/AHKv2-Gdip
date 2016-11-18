@@ -16,7 +16,7 @@ If !pToken := Gdip_Startup()
 	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 	ExitApp
 }
-OnExit, Exit
+OnExit("ExitFunc")
 
 ; Create a gui where we can select the file we want to rotate, the angle to rotate it by and whether we want to flip it
 Gui, 1: +ToolWindow +AlwaysOnTop
@@ -149,7 +149,12 @@ WM_LBUTTONDOWN()
 ; If the user closes the gui or closes the program then we want to shut down gdi+ and exit the application
 Esc::
 GuiClose:
-Exit:
-Gdip_Shutdown(pToken)
-ExitApp
-Return
+   ExitApp
+return
+
+ExitFunc()
+{
+   global
+   Gdip_Shutdown(pToken)
+}
+

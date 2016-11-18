@@ -17,7 +17,7 @@ If !pToken := Gdip_Startup()
 	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 	ExitApp
 }
-OnExit, Exit
+OnExit("ExitFunc")
 
 ; Create a layered window (+E0x80000 : must be used for UpdateLayeredWindow to work!) that is always on top (+AlwaysOnTop), has no taskbar entry or caption
 Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
@@ -92,8 +92,10 @@ Return
 
 ;#######################################################################
 
-Exit:
-; gdi+ may now be shutdown on exiting the program
-Gdip_Shutdown(pToken)
-ExitApp
-Return
+ExitFunc()
+{
+   global
+   ; gdi+ may now be shutdown on exiting the program
+   Gdip_Shutdown(pToken)
+}
+

@@ -16,7 +16,7 @@ If !pToken := Gdip_Startup()
 	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 	ExitApp
 }
-OnExit, Exit
+OnExit("ExitFunc")
 
 ; Get the dimensions of the primary monitor
 ; these funcs are based off MDMF lib and are now included in the Gdip_All library 
@@ -85,20 +85,22 @@ Return
 
 ;#######################################################################
 
-Exit:
-; Select the object back into the hdc
-SelectObject(hdc, obm)
+ExitFunc()
+{
+   global
+   ; Select the object back into the hdc
+   SelectObject(hdc, obm)
 
-; Now the bitmap may be deleted
-DeleteObject(hbm)
+   ; Now the bitmap may be deleted
+   DeleteObject(hbm)
 
-; Also the device context related to the bitmap may be deleted
-DeleteDC(hdc)
+   ; Also the device context related to the bitmap may be deleted
+   DeleteDC(hdc)
 
-; The graphics may now be deleted
-Gdip_DeleteGraphics(G)
+   ; The graphics may now be deleted
+   Gdip_DeleteGraphics(G)
 
-; ...and gdi+ may now be shutdown
-Gdip_Shutdown(pToken)
-ExitApp
-Return
+   ; ...and gdi+ may now be shutdown
+   Gdip_Shutdown(pToken)
+}
+

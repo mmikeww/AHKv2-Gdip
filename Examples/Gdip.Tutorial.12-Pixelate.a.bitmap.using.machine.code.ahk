@@ -16,7 +16,7 @@ If !pToken := Gdip_Startup()
    MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
    ExitApp
 }
-OnExit, Exit
+OnExit("ExitFunc")
 
 ; Create a layered window that is always on top as usual and get a handle to the window
 Gui, 1: -Caption +E0x80000 +LastFound +OwnDialogs +Owner +AlwaysOnTop
@@ -90,10 +90,15 @@ WM_LBUTTONDOWN()
 
 ; On exit, dispose of everything created
 Esc::
-Exit:
-Gdip_DisposeImage(pBitmapOut), Gdip_DisposeImage(pBitmap)
-SelectObject(hdc, obm), DeleteObject(hbm), DeleteDC(hdc)
-Gdip_DeleteGraphics(G)
-Gdip_Shutdown(pToken)
-ExitApp
+   ExitApp
 return
+
+ExitFunc()
+{
+   global
+   Gdip_DisposeImage(pBitmapOut), Gdip_DisposeImage(pBitmap)
+   SelectObject(hdc, obm), DeleteObject(hbm), DeleteDC(hdc)
+   Gdip_DeleteGraphics(G)
+   Gdip_Shutdown(pToken)
+}
+

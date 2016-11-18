@@ -16,7 +16,7 @@ If !pToken := Gdip_Startup()
 	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 	ExitApp
 }
-OnExit, Exit
+OnExit("ExitFunc")
 
 ; Before we start there are some design elements we must consider.
 ; We can either make the script faster. Creating the bitmap 1st and just write the new progress bar onto it every time and updating it on the gui
@@ -94,8 +94,13 @@ Gdip_SetProgress(ByRef Variable, Percentage, Foreground, Background:=0x00000000,
 ;#######################################################################
 
 GuiClose:
-Exit:
-; gdi+ may now be shutdown
-Gdip_Shutdown(pToken)
-ExitApp
-Return
+   ExitApp
+return
+
+ExitFunc()
+{
+   global
+   ; gdi+ may now be shutdown
+   Gdip_Shutdown(pToken)
+}
+
