@@ -1,8 +1,9 @@
-; Gdip standard library v1.49 updated by guest3456 on 11/18/16
+; Gdip standard library v1.50 on 11/20/16
 ; Gdip standard library v1.45 by tic (Tariq Porter) 07/09/11
 ; Modifed by Rseding91 using fincs 64 bit compatible Gdip library 5/1/2013
 ; Supports: Basic, _L ANSi, _L Unicode x86 and _L Unicode x64
 ;
+; Updated 11/20/2016 - fixed Gdip_BitmapFromBRA() by 'just me'
 ; Updated 11/18/2016 - backward compatible support for both AHK v1.1 and AHK v2
 ; Updated 11/15/2016 - initial AHK v2 support by guest3456
 ; Updated 2/20/2014 - fixed Gdip_CreateRegion() and Gdip_GetClipRegion() on AHK Unicode x86
@@ -686,7 +687,7 @@ Gdip_LibraryVersion()
 ; 					Updated by guest3456 preliminary AHK v2 support
 Gdip_LibrarySubVersion()
 {
-	return 1.49
+	return 1.50
 }
 
 ;#####################################################################################

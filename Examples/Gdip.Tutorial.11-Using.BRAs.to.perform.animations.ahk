@@ -7,7 +7,7 @@
 ; #NoEnv
 
 ; Uncomment if Gdip.ahk is not in your standard library
-;#Include, Gdip.ahk
+#Include, ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
@@ -20,9 +20,9 @@ If !pToken := Gdip_Startup()
 OnExit("AppExit")  ; Requires [v1.1.20+]
 
 ; I've added a simple new function here, just to ensure if anyone is having any problems then to make sure they are using the correct library version
-if (Gdip_LibraryVersion() < 1.30)
+if (Gdip_LibrarySubVersion() < 1.50)
 {
-	MsgBox, 48, version error!, Please download the latest version of the gdi+ library
+	MsgBox, 48, version error!, This example requires v1.50 of the Gdip library
 	ExitApp
 }
 
@@ -55,7 +55,7 @@ hwnd1 := WinExist()
 ; If the image we want to work with does not exist on disk, then download it...
 If !FileExist("Gdip.tutorial.file-fish.bra")
 {
-	MsgBox, 48, File error!, Please download Gdip.tutorial.file-fish.bra from`nwww.autohotkey.net/~tic/Gdip.tutorial.file-fish.bra
+	MsgBox, 48, File error!, Could not read file "Gdip.tutorial.file-fish.bra" in the current directory
 	ExitApp
 }
 ; UrlDownloadToFile, http://www.autohotkey.net/~tic/Gdip.tutorial.file-fish.bra, Gdip.tutorial.file-fish.bra
@@ -66,14 +66,14 @@ If !(FileObject := FileOpen("Gdip.tutorial.file-fish.bra", "r")) {
 	ExitApp
 }
 FileObject.RawRead(BRA, FileObject.Length)
-FileObject.CLose()
+FileObject.Close()
 
 ; Get a count of the number of files contained in the BRA
 ImageCount := BRA_GetCount(BRA)
 
 ; Built into the Gdip library is the ability to directly get a pointer to a bitmap from a BRA
-; Gdip_BitmapFromBRA(ByRef BRANameOrTOC, File, Alternate=0)
-; The 1st parameter is the BRA file name or a TOC object returned by Gdip_TOCFromBRA()
+; Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate=0)
+; The 1st parameter is the BRA in memory from FileObject.RawRead()
 ; The 2nd parameter is the name of the file you wish to get a bitmap for
 ; If the 3rd parameter is true (as it is here) then the name (2nd parameter) doesn't go by file name, but instead by file number
 ; So we take a pointer to the bitmap of the 1st file
@@ -331,6 +331,7 @@ WM_LBUTTONDOWN()
 
 ; On Exit clean up resources
 AppExit() {
+global
 ; Select the object back into the hdc
 SelectObject(hdc, obm)
 
