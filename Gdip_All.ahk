@@ -704,47 +704,36 @@ Gdip_LibrarySubVersion()
 ;						-3 = The BRA has information missing
 ;						-4 = Could not find file inside the BRA
 
-Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate:=0)
-{
-	Static FName := "ObjRelease"
-	
-	if !BRAFromMemIn
-		return -1
-	Loop, Parse, % BRAFromMemIn, `n
-	{
-		if (A_Index = 1)
-		{
-			Header := StrSplit(A_LoopField, "|")
-			if (Header.Length() != 4 || Header[2] != "BRA!")
-				return -2
-		}
-		else if (A_Index = 2)
-		{
-			Info := StrSplit(A_LoopField, "|")
-			if (Info.Length() != 3)
-				return -3
-		}
-		else
-			break
-	}
-	if !Alternate
-		File := StrReplace(File, "\", "\\")                
-	pattern_opts := (A_AhkVersion < "2") ? "miO`n)" : "mi`n)"
-	RegExMatch(BRAFromMemIn, pattern_opts "^" (Alternate ? File "\|.+?\|(\d+)\|(\d+)" : "\d+\|" File "\|(\d+)\|(\d+)") "$", FileInfo)
-	if !FileInfo
-		return -4
-	
-	hData := DllCall("GlobalAlloc", "uint", 2, Ptr, FileInfo[2], Ptr)
-	pData := DllCall("GlobalLock", Ptr, hData, Ptr)
-	DllCall("RtlMoveMemory", Ptr, pData, Ptr, &BRAFromMemIn+Info[2]+FileInfo[1], Ptr, FileInfo[2])
-	DllCall("GlobalUnlock", Ptr, hData)
-	DllCall("ole32\CreateStreamOnHGlobal", Ptr, hData, "int", 1, A_PtrSize ? "UPtr*" : "UInt*", pStream)
-	DllCall("gdiplus\GdipCreateBitmapFromStream", Ptr, pStream, A_PtrSize ? "UPtr*" : "UInt*", pBitmap)
-	If (A_PtrSize)
-		%FName%(pStream)
-	Else
-		DllCall(NumGet(NumGet(1*pStream)+8), "uint", pStream)
-	return pBitmap
+Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate := 0) {
+	If !(BRAFromMemIn)
+		Return -1
+   	Headers := StrSplit(StrGet(&BRAFromMemIn, 256, "CP0"), "`n")
+   	Header := StrSplit(Headers.1, "|")
+   	If (Header.Length() != 4) || (Header.2 != "BRA!")
+		Return -2
+   	Info := StrSplit(Headers.2, "|")
+	If (Info.Length() != 3)
+		Return -3
+   	OffsetTOC := StrPut(Headers.1, "CP0") + StrPut(Headers.2, "CP0") ;  + 2
+   	OffsetData := Info.2
+   	SearchIndex := Alternate ? 1 : 2
+   	TOC := StrGet(&BRAFromMemIn + OffsetTOC, OffsetData - OffsetTOC - 1, "CP0")
+   	RX1 := A_AhkVersion < "2" ? "mi`nO)^" : "mi`n)^"
+   	Offset := Size := 0
+   	If RegExMatch(TOC, RX1 . (Alternate ? File "\|.+?" : "\d+\|" . File) . "\|(\d+)\|(\d+)$", FileInfo) {
+      		Offset := OffsetData + FileInfo.1
+      		Size := FileInfo.2
+   	}
+   	If (Size = 0)
+      		Return -4
+	hData := DllCall("GlobalAlloc", "UInt", 2, "UInt", Size, "UPtr")
+	pData := DllCall("GlobalLock", "Ptr", hData, "UPtr")
+	DllCall("RtlMoveMemory", "Ptr", pData, "Ptr", &BRAFromMemIn + Offset, "Ptr", Size)
+	DllCall("GlobalUnlock", "Ptr", hData)
+	DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", 1, "PtrP", pStream)
+	DllCall("Gdiplus.dll\GdipCreateBitmapFromStream", "Ptr", pStream, "PtrP", pBitmap)
+   	ObjRelease(pStream)
+	Return pBitmap
 }
 
 ;#####################################################################################
@@ -1323,8 +1312,8 @@ Gdip_SetImageAttributesColorMatrix(Matrix)
 	Matrix := StrSplit(Matrix, "|")
 	Loop, 25
 	{
-		Matrix := (Matrix[A_Index] != "") ? Matrix[A_Index] : Mod(A_Index-1, 6) ? 0 : 1
-		NumPut(Matrix, ColourMatrix, (A_Index-1)*4, "float")
+		M := (Matrix[A_Index] != "") ? Matrix[A_Index] : Mod(A_Index-1, 6) ? 0 : 1
+		NumPut(M, ColourMatrix, (A_Index-1)*4, "float")
 	}
 	DllCall("gdiplus\GdipCreateImageAttributes", A_PtrSize ? "UPtr*" : "uint*", ImageAttr)
 	DllCall("gdiplus\GdipSetImageAttributesColorMatrix", Ptr, ImageAttr, "int", 1, "int", 1, Ptr, &ColourMatrix, Ptr, 0, "int", 0)
