@@ -6,6 +6,11 @@ See the [commit history](https://github.com/mmikeww/AHKv2-Gdip/commits/master) t
 
 It has not been tested thorougly on AHK v2, but all of the tutorial files in the `/Examples/` subfolder work successfully. 
 
+# Usage
+All of the Gdip_*() functions use the same syntax as before, so no changes should be required.  
+
+The one exception is for `Gdip_BitmapFromBRA()`. It requires you to read the .bra file witih `FileObj.RawRead()` instead of the `FileRead`command. See the Tutorial.11 file in the Examples folder
+
 # History
 - @tic created the original [Gdip.ahk](https://github.com/tariqporter/Gdip/) library
 - @Rseding91 updated it to make it compatible with unicode and x64 AHK versions and renamed the file `Gdip_All.ahk`
