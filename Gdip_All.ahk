@@ -1618,6 +1618,9 @@ Gdip_GetImageHeight(pBitmap)
 
 Gdip_GetImageDimensions(pBitmap, ByRef Width, ByRef Height)
 {
+	pBitmap := ""
+	Width := 0
+	Height := 0
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	DllCall("gdiplus\GdipGetImageWidth", Ptr, pBitmap, "uint*", Width)
 	DllCall("gdiplus\GdipGetImageHeight", Ptr, pBitmap, "uint*", Height)
@@ -1691,10 +1694,11 @@ Gdip_BitmapSetResolution(pBitmap, dpix, dpiy)
 
 Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 {
+	pBitmap := ""
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	, PtrA := A_PtrSize ? "UPtr*" : "UInt*"
 	
-	SplitPath, % sFile,,, ext
+	SplitPath, % sFile,,, Extension
 	if RegExMatch(Extension, "^(?i:exe|dll)$")
 	{
 		Sizes := IconSize ? IconSize : 256 "|" 128 "|" 64 "|" 48 "|" 32 "|" 16
@@ -2361,6 +2365,7 @@ Gdip_Startup()
 	if !DllCall("GetModuleHandle", "str", "gdiplus", Ptr)
 		DllCall("LoadLibrary", "str", "gdiplus")
 	VarSetCapacity(si, A_PtrSize = 8 ? 24 : 16, 0), si := Chr(1)
+	pToken := 0
 	DllCall("gdiplus\GdiplusStartup", A_PtrSize ? "UPtr*" : "uint*", pToken, Ptr, &si, Ptr, 0)
 	return pToken
 }
@@ -2825,4 +2830,3 @@ MDMF_GetInfo(HMON) {
    }
    Return False
 }
-
