@@ -1,9 +1,7 @@
 # AHKv2-Gdip
-This repository contains the GDI+ library (Gdip_All.ahk) backwards compatiable with both AHK v1.1 and up to [AHK v2-alpha77](https://autohotkey.com/v2/).  
+This repository contains the GDI+ library (Gdip_All.ahk) compatible with [AHK v2-alpha79](https://autohotkey.com/v2/).  
 
-AHK v2 may still undergo further changes to the syntax (such as removal of Command syntax), in which case this library will no longer be backward compatible.  
-
-Support for AHK v1.0 has been dropped (find the original `Gdip_All.ahk` library if you need that).  
+AHK v2 made many changes to the syntax, so this library is no longer backward compatible to versions 1.x (find the original `Gdip_All.ahk` library if you need that).
 
 See the [commit history](https://github.com/mmikeww/AHKv2-Gdip/commits/master) to see the changes made. There is probably lots of room for improvement still.  
 

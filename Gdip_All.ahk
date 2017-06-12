@@ -1,9 +1,11 @@
+; Gdip standard library v1.52 on 6/11/2017
 ; Gdip standard library v1.51 on 1/27/2017
 ; Gdip standard library v1.50 on 11/20/16
 ; Gdip standard library v1.45 by tic (Tariq Porter) 07/09/11
 ; Modifed by Rseding91 using fincs 64 bit compatible Gdip library 5/1/2013
 ; Supports: Basic, _L ANSi, _L Unicode x86 and _L Unicode x64
 ;
+; Updated 6/11/2017 - made code compatible with new AHK v2.0-a079-be5df98 by buliasz (Bartlomiej Uliasz)
 ; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible by buliasz (Bartlomiej Uliasz)
 ; Updated 11/20/2016 - fixed Gdip_BitmapFromBRA() by 'just me'
 ; Updated 11/18/2016 - backward compatible support for both AHK v1.1 and AHK v2
@@ -80,7 +82,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 		VarSetCapacity(pt, 8), NumPut(x, pt, 0, "UInt"), NumPut(y, pt, 4, "UInt")
 
 	if (w = "") ||(h = "")
-		WinGetPos,,, w, h, ahk_id %hwnd%
+		WinGetPos ,, w, h, ahk_id %hwnd%
 
 	return DllCall("UpdateLayeredWindow"
 					, Ptr, hwnd
@@ -223,7 +225,7 @@ SetStretchBltMode(hdc, iStretchMode:=4)
 
 SetImage(hwnd, hBitmap)
 {
-	SendMessage, 0x172, 0x0, % hBitmap,, ahk_id %hwnd%
+	SendMessage 0x172, 0x0, %hBitmap%,, ahk_id %hwnd%
 	E := ErrorLevel
 	DeleteObject(E)
 	return E
@@ -281,7 +283,7 @@ SetImage(hwnd, hBitmap)
 
 SetSysColorToControl(hwnd, SysColor:=15)
 {
-	WinGetPos,,, w, h, ahk_id %hwnd%
+	WinGetPos ,, w, h, ahk_id %hwnd%
 	bc := DllCall("GetSysColor", "Int", SysColor, "UInt")
 	pBrushClear := Gdip_BrushCreateSolid(0xff000000 | (bc >> 16 | bc & 0xff00 | (bc & 0xff) << 16))
 	pBitmap := Gdip_CreateBitmap(w, h), G := Gdip_GraphicsFromImage(pBitmap)
@@ -312,17 +314,17 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 {
 	if (Screen = 0)
 	{
-		Sysget, _x, 76
-		Sysget, _y, 77
-		Sysget, _w, 78
-		Sysget, _h, 79
+		_x := SysGet(76)
+		_y := SysGet(77)
+		_w := SysGet(78)
+		_h := SysGet(79)
 	}
 	else if (SubStr(Screen, 1, 5) = "hwnd:")
 	{
 		Screen := SubStr(Screen, 6)
 		if !WinExist( "ahk_id " Screen)
 			return -2
-		WinGetPos,,, _w, _h, ahk_id %Screen%
+		WinGetPos ,, _w, _h, ahk_id %Screen%
 		_x := _y := 0
 		hhdc := GetDCEx(Screen, 3)
 	}
@@ -362,7 +364,7 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 
 Gdip_BitmapFromHWND(hwnd)
 {
-	WinGetPos,,, Width, Height, ahk_id %hwnd%
+	WinGetPos ,, Width, Height, ahk_id %hwnd%
 	hbm := CreateDIBSection(Width, Height), hdc := CreateCompatibleDC(), obm := SelectObject(hdc, hbm)
 	PrintWindow(hwnd, hdc)
 	pBitmap := Gdip_CreateBitmapFromHBITMAP(hbm)
@@ -689,7 +691,7 @@ Gdip_LibraryVersion()
 ; 					Updated by guest3456 preliminary AHK v2 support
 Gdip_LibrarySubVersion()
 {
-	return 1.51
+	return 1.52
 }
 
 ;#####################################################################################
@@ -714,11 +716,11 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate := 0) {
 	Header := StrSplit(Headers.1, "|")
 	If (Header.Length() != 4) || (Header.2 != "BRA!")
 		Return -2
-	Info := StrSplit(Headers.2, "|")
-	If (Info.Length() != 3)
+	_Info := StrSplit(Headers.2, "|")
+	If (_Info.Length() != 3)
 		Return -3
 	OffsetTOC := StrPut(Headers.1, "CP0") + StrPut(Headers.2, "CP0") ;  + 2
-	OffsetData := Info.2
+	OffsetData := _Info.2
 	SearchIndex := Alternate ? 1 : 2
 	TOC := StrGet(&BRAFromMemIn + OffsetTOC, OffsetData - OffsetTOC - 1, "CP0")
 	RX1 := A_AhkVersion < "2" ? "mi`nO)^" : "mi`n)^"
@@ -958,7 +960,7 @@ Gdip_DrawLines(pGraphics, pPen, Points)
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	Loop, % Points.Length()
+	Loop Points.Length()
 	{
 		Coord := StrSplit(Points[A_Index], ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
@@ -1049,7 +1051,7 @@ Gdip_FillPolygon(pGraphics, pBrush, Points, FillMode:=0)
 
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	Loop, % Points.Length()
+	Loop Points.Length()
 	{
 		Coord := StrSplit(Points[A_Index], ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
@@ -1174,7 +1176,7 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	Loop, % Points.Length()
+	Loop Points.Length()
 	{
 		Coord := StrSplit(Points[A_Index], ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
@@ -1313,7 +1315,7 @@ Gdip_SetImageAttributesColorMatrix(Matrix)
 	VarSetCapacity(ColourMatrix, 100, 0)
 	Matrix := RegExReplace(RegExReplace(Matrix, "^[^\d-\.]+([\d\.])", "$1", "", 1), "[^\d-\.]+", "|")
 	Matrix := StrSplit(Matrix, "|")
-	Loop, 25
+	Loop 25
 	{
 		M := (Matrix[A_Index] != "") ? Matrix[A_Index] : Mod(A_Index-1, 6) ? 0 : 1
 		NumPut(M, ColourMatrix, (A_Index-1)*4, "float")
@@ -1467,7 +1469,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
-	SplitPath, % sOutput,,, Extension
+	SplitPath sOutput,,, Extension
 	if !RegExMatch(Extension, "^(?i:BMP|DIB|RLE|JPG|JPEG|JPE|JFIF|GIF|TIF|TIFF|PNG)$")
 		return -1
 	Extension := "." Extension
@@ -1480,7 +1482,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 
 	If (A_IsUnicode){
 		StrGet_Name := "StrGet"
-		Loop, % nCount
+		Loop nCount
 		{
 			sString := %StrGet_Name%(NumGet(ci, (idx := (48+7*A_PtrSize)*(A_Index-1))+32+3*A_PtrSize), "UTF-16")
 			if !InStr(sString, "*" Extension)
@@ -1490,7 +1492,7 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 			break
 		}
 	} else {
-		Loop, % nCount
+		Loop nCount
 		{
 			Location := NumGet(ci, 76*(A_Index-1)+44)
 			nSize := DllCall("WideCharToMultiByte", "uint", 0, "uint", 0, "uint", Location, "int", -1, "uint", 0, "int",  0, "uint", 0, "uint", 0)
@@ -1515,13 +1517,13 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 			DllCall("gdiplus\GdipGetEncoderParameterListSize", Ptr, pBitmap, Ptr, pCodec, "uint*", nSize)
 			VarSetCapacity(EncoderParameters, nSize, 0)
 			DllCall("gdiplus\GdipGetEncoderParameterList", Ptr, pBitmap, Ptr, pCodec, "uint", nSize, Ptr, &EncoderParameters)
-			Loop, % NumGet(EncoderParameters, "UInt")
+			Loop NumGet(EncoderParameters, "UInt")
 			{
 				elem := (24+(A_PtrSize ? A_PtrSize : 4))*(A_Index-1) + 4 + (pad := A_PtrSize = 8 ? 4 : 0)
 				if (NumGet(EncoderParameters, elem+16, "UInt") = 1) && (NumGet(EncoderParameters, elem+20, "UInt") = 6)
 				{
-					p := elem+&EncoderParameters-pad-4
-					NumPut(Quality, NumGet(NumPut(4, NumPut(1, p+0)+20, "UInt")), "UInt")
+					_p := elem+&EncoderParameters-pad-4
+					NumPut(Quality, NumGet(NumPut(4, NumPut(1, _p+0)+20, "UInt")), "UInt")
 					break
 				}
 			}
@@ -1536,10 +1538,10 @@ Gdip_SaveBitmapToFile(pBitmap, sOutput, Quality:=75)
 		VarSetCapacity(wOutput, -1)
 		if !VarSetCapacity(wOutput)
 			return -4
-		_E := DllCall("gdiplus\GdipSaveImageToFile", Ptr, pBitmap, Ptr, &wOutput, Ptr, pCodec, "uint", p ? p : 0)
+		_E := DllCall("gdiplus\GdipSaveImageToFile", Ptr, pBitmap, Ptr, &wOutput, Ptr, pCodec, "uint", _p ? _p : 0)
 	}
 	else
-		_E := DllCall("gdiplus\GdipSaveImageToFile", Ptr, pBitmap, Ptr, &sOutput, Ptr, pCodec, "uint", p ? p : 0)
+		_E := DllCall("gdiplus\GdipSaveImageToFile", Ptr, pBitmap, Ptr, &sOutput, Ptr, pCodec, "uint", _p ? _p : 0)
 	return _E ? -5 : 0
 }
 
@@ -1699,14 +1701,14 @@ Gdip_CreateBitmapFromFile(sFile, IconNumber:=1, IconSize:="")
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	, PtrA := A_PtrSize ? "UPtr*" : "UInt*"
 
-	SplitPath, % sFile,,, Extension
+	SplitPath sFile,,, Extension
 	if RegExMatch(Extension, "^(?i:exe|dll)$")
 	{
 		Sizes := IconSize ? IconSize : 256 "|" 128 "|" 64 "|" 48 "|" 32 "|" 16
 		BufSize := 16 + (2*(A_PtrSize ? A_PtrSize : 4))
 
 		VarSetCapacity(buf, BufSize, 0)
-		Loop, Parse, % Sizes, |
+		Loop Parse, Sizes, "|"
 		{
 			DllCall("PrivateExtractIcons", "str", sFile, "int", IconNumber-1, "int", A_LoopField, "int", A_LoopField, PtrA, hIcon, PtrA, 0, "uint", 1, "uint", 0)
 
@@ -2092,14 +2094,14 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 		return -1
 
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
-	Loop, Parse, % Styles, "|"
+	Loop Parse, Styles, "|"
 	{
 		if RegExMatch(Options, "\b" A_loopField)
 		Style |= (A_LoopField != "StrikeOut") ? (A_Index-1) : 8
 	}
 
 	Align := 0, Alignments := "Near|Left|Centre|Center|Far|Right"
-	Loop, Parse, % Alignments, |
+	Loop Parse, Alignments, "|"
 	{
 		if RegExMatch(Options, "\b" A_loopField)
 			Align |= A_Index//2.1	; 0|0|1|1|2|2
@@ -2297,7 +2299,7 @@ Gdip_AddPathPolygon(Path, Points)
 
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	Loop, % Points.Length()
+	Loop Points.Length()
 	{
 		Coord := StrSplit(Points[A_Index], ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
@@ -2600,7 +2602,7 @@ Gdip_PixelateBitmap(pBitmap, ByRef pBitmapOut, BlockSize)
 		)"
 
 		VarSetCapacity(PixelateBitmap, StrLen(MCode_PixelateBitmap)//2)
-		Loop % StrLen(MCode_PixelateBitmap)//2		;%
+		Loop StrLen(MCode_PixelateBitmap)//2		;%
 			NumPut("0x" SubStr(MCode_PixelateBitmap, (2*A_Index)-1, 2), PixelateBitmap, A_Index-1, "UChar")
 		DllCall("VirtualProtect", Ptr, &PixelateBitmap, Ptr, VarSetCapacity(PixelateBitmap), "uint", 0x40, A_PtrSize ? "UPtr*" : "UInt*", 0)
 	}
