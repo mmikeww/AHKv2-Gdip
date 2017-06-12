@@ -691,7 +691,7 @@ Gdip_LibraryVersion()
 ; 					Updated by guest3456 preliminary AHK v2 support
 Gdip_LibrarySubVersion()
 {
-	return 1.51
+	return 1.52
 }
 
 ;#####################################################################################
