@@ -8,7 +8,7 @@
 ;
 ; Updated 6/19/2017 - Fixed few bugs from old syntax by Bartlomiej Uliasz
 ; Updated 6/11/2017 - made code compatible with new AHK v2.0-a079-be5df98 by Bartlomiej Uliasz
-; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible Bartlomiej Uliasz
+; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible by Bartlomiej Uliasz
 ; Updated 11/20/2016 - fixed Gdip_BitmapFromBRA() by 'just me'
 ; Updated 11/18/2016 - backward compatible support for both AHK v1.1 and AHK v2
 ; Updated 11/15/2016 - initial AHK v2 support by guest3456
