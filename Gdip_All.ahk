@@ -1,3 +1,4 @@
+; Gdip standard library v1.53 on 6/19/2017
 ; Gdip standard library v1.52 on 6/11/2017
 ; Gdip standard library v1.51 on 1/27/2017
 ; Gdip standard library v1.50 on 11/20/16
@@ -5,8 +6,9 @@
 ; Modifed by Rseding91 using fincs 64 bit compatible Gdip library 5/1/2013
 ; Supports: Basic, _L ANSi, _L Unicode x86 and _L Unicode x64
 ;
-; Updated 6/11/2017 - made code compatible with new AHK v2.0-a079-be5df98 by buliasz (Bartlomiej Uliasz)
-; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible by buliasz (Bartlomiej Uliasz)
+; Updated 6/19/2017 - Fixed few bugs from old syntax by Bartlomiej Uliasz
+; Updated 6/11/2017 - made code compatible with new AHK v2.0-a079-be5df98 by Bartlomiej Uliasz
+; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible Bartlomiej Uliasz
 ; Updated 11/20/2016 - fixed Gdip_BitmapFromBRA() by 'just me'
 ; Updated 11/18/2016 - backward compatible support for both AHK v1.1 and AHK v2
 ; Updated 11/15/2016 - initial AHK v2 support by guest3456
@@ -691,7 +693,7 @@ Gdip_LibraryVersion()
 ; 					Updated by guest3456 preliminary AHK v2 support
 Gdip_LibrarySubVersion()
 {
-	return 1.51
+	return 1.53
 }
 
 ;#####################################################################################
