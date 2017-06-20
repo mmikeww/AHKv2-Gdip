@@ -1,3 +1,4 @@
+; Gdip standard library v1.53 on 6/19/2017
 ; Gdip standard library v1.52 on 6/11/2017
 ; Gdip standard library v1.51 on 1/27/2017
 ; Gdip standard library v1.50 on 11/20/16
@@ -5,8 +6,9 @@
 ; Modifed by Rseding91 using fincs 64 bit compatible Gdip library 5/1/2013
 ; Supports: Basic, _L ANSi, _L Unicode x86 and _L Unicode x64
 ;
-; Updated 6/11/2017 - made code compatible with new AHK v2.0-a079-be5df98 by buliasz (Bartlomiej Uliasz)
-; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible by buliasz (Bartlomiej Uliasz)
+; Updated 6/19/2017 - Fixed few bugs from old syntax by Bartlomiej Uliasz
+; Updated 6/11/2017 - made code compatible with new AHK v2.0-a079-be5df98 by Bartlomiej Uliasz
+; Updated 1/27/2017 - fixed some bugs and made #Warn All compatible by Bartlomiej Uliasz
 ; Updated 11/20/2016 - fixed Gdip_BitmapFromBRA() by 'just me'
 ; Updated 11/18/2016 - backward compatible support for both AHK v1.1 and AHK v2
 ; Updated 11/15/2016 - initial AHK v2 support by guest3456
@@ -82,7 +84,7 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 		VarSetCapacity(pt, 8), NumPut(x, pt, 0, "UInt"), NumPut(y, pt, 4, "UInt")
 
 	if (w = "") ||(h = "")
-		WinGetPos ,, w, h, ahk_id %hwnd%
+		WinGetPos(,, w, h, "ahk_id " hwnd)
 
 	return DllCall("UpdateLayeredWindow"
 					, Ptr, hwnd
@@ -225,7 +227,7 @@ SetStretchBltMode(hdc, iStretchMode:=4)
 
 SetImage(hwnd, hBitmap)
 {
-	SendMessage 0x172, 0x0, %hBitmap%,, ahk_id %hwnd%
+	SendMessage(0x172, 0x0, hBitmap,, "ahk_id " hwnd)
 	E := ErrorLevel
 	DeleteObject(E)
 	return E
@@ -283,7 +285,7 @@ SetImage(hwnd, hBitmap)
 
 SetSysColorToControl(hwnd, SysColor:=15)
 {
-	WinGetPos ,, w, h, ahk_id %hwnd%
+	WinGetPos(,, w, h, "ahk_id " hwnd)
 	bc := DllCall("GetSysColor", "Int", SysColor, "UInt")
 	pBrushClear := Gdip_BrushCreateSolid(0xff000000 | (bc >> 16 | bc & 0xff00 | (bc & 0xff) << 16))
 	pBitmap := Gdip_CreateBitmap(w, h), G := Gdip_GraphicsFromImage(pBitmap)
@@ -322,9 +324,9 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 	else if (SubStr(Screen, 1, 5) = "hwnd:")
 	{
 		Screen := SubStr(Screen, 6)
-		if !WinExist( "ahk_id " Screen)
+		if !WinExist("ahk_id " Screen)
 			return -2
-		WinGetPos ,, _w, _h, ahk_id %Screen%
+		WinGetPos(,, _w, _h, "ahk_id " Screen)
 		_x := _y := 0
 		hhdc := GetDCEx(Screen, 3)
 	}
@@ -364,7 +366,7 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 
 Gdip_BitmapFromHWND(hwnd)
 {
-	WinGetPos ,, Width, Height, ahk_id %hwnd%
+	WinGetPos(,, Width, Height, "ahk_id " hwnd)
 	hbm := CreateDIBSection(Width, Height), hdc := CreateCompatibleDC(), obm := SelectObject(hdc, hbm)
 	PrintWindow(hwnd, hdc)
 	pBitmap := Gdip_CreateBitmapFromHBITMAP(hbm)
@@ -691,7 +693,7 @@ Gdip_LibraryVersion()
 ; 					Updated by guest3456 preliminary AHK v2 support
 Gdip_LibrarySubVersion()
 {
-	return 1.52
+	return 1.53
 }
 
 ;#####################################################################################
