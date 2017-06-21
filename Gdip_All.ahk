@@ -1144,11 +1144,11 @@ Gdip_FillRegion(pGraphics, pBrush, Region)
 ;
 ; return				status enumeration. 0 = success
 
-Gdip_FillPath(pGraphics, pBrush, Path)
+Gdip_FillPath(pGraphics, pBrush, pPath)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
-	return DllCall("gdiplus\GdipFillPath", Ptr, pGraphics, Ptr, pBrush, Ptr, Path)
+	return DllCall("gdiplus\GdipFillPath", Ptr, pGraphics, Ptr, pBrush, Ptr, pPath)
 }
 
 ;#####################################################################################
@@ -2286,16 +2286,16 @@ Gdip_CreateMatrix()
 ; Winding = 1
 Gdip_CreatePath(BrushMode:=0)
 {
-	DllCall("gdiplus\GdipCreatePath", "int", BrushMode, A_PtrSize ? "UPtr*" : "UInt*", Path)
-	return Path
+	DllCall("gdiplus\GdipCreatePath", "int", BrushMode, A_PtrSize ? "UPtr*" : "UInt*", pPath)
+	return pPath
 }
 
-Gdip_AddPathEllipse(Path, x, y, w, h)
+Gdip_AddPathEllipse(pPath, x, y, w, h)
 {
-	return DllCall("gdiplus\GdipAddPathEllipse", A_PtrSize ? "UPtr" : "UInt", Path, "float", x, "float", y, "float", w, "float", h)
+	return DllCall("gdiplus\GdipAddPathEllipse", A_PtrSize ? "UPtr" : "UInt", pPath, "float", x, "float", y, "float", w, "float", h)
 }
 
-Gdip_AddPathPolygon(Path, Points)
+Gdip_AddPathPolygon(pPath, Points)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
@@ -2307,12 +2307,12 @@ Gdip_AddPathPolygon(Path, Points)
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
 
-	return DllCall("gdiplus\GdipAddPathPolygon", Ptr, Path, Ptr, &PointF, "int", Points.Length())
+	return DllCall("gdiplus\GdipAddPathPolygon", Ptr, pPath, Ptr, &PointF, "int", Points.Length())
 }
 
-Gdip_DeletePath(Path)
+Gdip_DeletePath(pPath)
 {
-	return DllCall("gdiplus\GdipDeletePath", A_PtrSize ? "UPtr" : "UInt", Path)
+	return DllCall("gdiplus\GdipDeletePath", A_PtrSize ? "UPtr" : "UInt", pPath)
 }
 
 ;#####################################################################################
@@ -2464,10 +2464,10 @@ Gdip_SetClipRect(pGraphics, x, y, w, h, CombineMode:=0)
 	return DllCall("gdiplus\GdipSetClipRect",  A_PtrSize ? "UPtr" : "UInt", pGraphics, "float", x, "float", y, "float", w, "float", h, "int", CombineMode)
 }
 
-Gdip_SetClipPath(pGraphics, Path, CombineMode:=0)
+Gdip_SetClipPath(pGraphics, pPath, CombineMode:=0)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
-	return DllCall("gdiplus\GdipSetClipPath", Ptr, pGraphics, Ptr, Path, "int", CombineMode)
+	return DllCall("gdiplus\GdipSetClipPath", Ptr, pGraphics, Ptr, pPath, "int", CombineMode)
 }
 
 Gdip_ResetClip(pGraphics)
