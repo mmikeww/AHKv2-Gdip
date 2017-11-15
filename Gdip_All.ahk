@@ -79,23 +79,30 @@
 UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
-
+	
 	if ((x != "") && (y != ""))
 		VarSetCapacity(pt, 8), NumPut(x, pt, 0, "UInt"), NumPut(y, pt, 4, "UInt")
-
+	
 	if (w = "") ||(h = "")
-		WinGetPos(,, w, h, "ahk_id " hwnd)
-
+	{ 
+		VarSetCapacity( winRect, 16, 0 ) ;is 16 on both 32 and 64
+		DllCall( "GetWindowRect"
+		, Ptr, hwnd
+		, Ptr, &winRect )
+		w := NumGet( winRect, 0x8, "UInt" )
+		h := NumGet( winRect, 0xC, "UInt" )
+	}
+	
 	return DllCall("UpdateLayeredWindow"
-					, Ptr, hwnd
-					, Ptr, 0
-					, Ptr, ((x = "") && (y = "")) ? 0 : &pt
-					, "int64*", w|h<<32
-					, Ptr, hdc
-					, "int64*", 0
-					, "uint", 0
-					, "UInt*", Alpha<<16|1<<24
-					, "uint", 2)
+	, Ptr, hwnd
+	, Ptr, 0
+	, Ptr, ((x = "") && (y = "")) ? 0 : &pt
+	, "int64*", w|h<<32
+	, Ptr, hdc
+	, "int64*", 0
+	, "uint", 0
+	, "UInt*", Alpha<<16|1<<24
+	, "uint", 2)
 }
 
 ;#####################################################################################
