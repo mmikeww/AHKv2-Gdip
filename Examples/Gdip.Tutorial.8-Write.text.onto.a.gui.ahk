@@ -13,9 +13,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	;AHK v1
-	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
 	ExitApp
 }
 OnExit("ExitFunc")
@@ -27,12 +25,9 @@ Width := 300, Height := 200
 ;AHK v1
 ;Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
 ;Gui, 1: Add, Edit, w%Width% h20 y300 vMeEdit
+;Gui, 1: Show, NA
 Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
 Gui1.Add("Edit", "w" Width " h20 y300 vMeEdit", "")
-
-; Show the window
-;AHK v1
-;Gui, 1: Show, NA
 Gui1.Show("NA")
 
 ; Get a handle to this window we have created in order to update it later
@@ -70,9 +65,7 @@ Font := "Arial"
 ; If they do not then we can do something about it. I choose to give a wraning and exit!
 If !Gdip_FontFamilyCreate(Font)
 {
-	;AHK v1
-	;MsgBox, 48, Font error!, The font you have specified does not exist on the system
-	MsgBox "Font error!", "The font you have specified does not exist on the system", 48
+	MsgBox "The font you have specified does not exist on the system"
 	ExitApp
 }
 

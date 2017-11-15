@@ -14,9 +14,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	;AHK v1
-	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
 	ExitApp
 }
 OnExit("ExitFunc")
@@ -24,11 +22,8 @@ OnExit("ExitFunc")
 ; Create a layered window (+E0x80000 : must be used for UpdateLayeredWindow to work!) that is always on top (+AlwaysOnTop), has no taskbar entry or caption
 ;AHK v1
 ;Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
-Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
-
-; Show the window
-;AHK v1
 ;Gui, 1: Show, NA
+Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
 Gui1.Show("NA")
 
 ; Get a handle to this window we have created in order to update it later
@@ -40,9 +35,7 @@ pBitmap := Gdip_CreateBitmapFromFile("background.png")
 ; Check to ensure we actually got a bitmap from the file, in case the file was corrupt or some other error occured
 If !pBitmap
 {
-	;AHK v1
-	;MsgBox, 48, File loading error!, Could not load 'background.png'
-	MsgBox "File loading error!", "Could not load 'background.png'", 48
+	MsgBox "Could not load 'background.png'"
 	ExitApp
 }
 

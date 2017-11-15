@@ -13,9 +13,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	;AHK v1
-	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
 	ExitApp
 }
 OnExit("ExitFunc")
@@ -65,7 +63,8 @@ ButtonGo_Click(GuiCtrlObj, Info)
 {
 ; Submit the variables to see the degress to rotate by and whether to flip the image
 ;AHK v1
-;Go:
+;global File, Angle, Horizontal, Vertical
+;Go:                  ; this label is ok inside the func as long as the vars above are global
 ;Gui, 1: +OwnDialogs
 ;Gui, 1: Submit, NoHide
 GuiCtrlObj.Gui.Opt("+OwnDialogs")

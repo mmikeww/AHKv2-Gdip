@@ -13,9 +13,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-   ;AHK v1
-   ;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-   MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+   MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
    ExitApp
 }
 OnExit("ExitFunc")
@@ -34,9 +32,7 @@ If FileExist("MJ.jpg")
 ;pBitmap := Gdip_BitmapFromScreen()
 If !pBitmap
 {
-	;AHK v1
-	;MsgBox, 48, File loading error!, Could not load the image 'MJ.jpg'
-	MsgBox "File loading error!", "Could not load the image 'MJ.jpg'", 48
+	MsgBox "Could not load the image 'MJ.jpg' "
 	ExitApp
 }
 ; Get the width and height of the bitmap we have just created from the file

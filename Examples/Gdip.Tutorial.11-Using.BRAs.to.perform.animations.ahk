@@ -12,9 +12,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	;AHK v1
-	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
 	ExitApp
 }
 ; On exiting the program we will go to Exit subroutine to clean up any resources
@@ -24,9 +22,7 @@ OnExit("AppExit")  ; Requires [v1.1.20+]
 ; I've added a simple new function here, just to ensure if anyone is having any problems then to make sure they are using the correct library version
 if (Gdip_LibrarySubVersion() < 1.50)
 {
-	;AHK v1
-	;MsgBox, 48, version error!, This example requires v1.50 of the Gdip library
-	MsgBox "version error!", "This example requires v1.50 of the Gdip library", 48
+	MsgBox "This example requires v1.50 of the Gdip library"
 	ExitApp
 }
 
@@ -62,18 +58,14 @@ hwnd1 := WinExist()
 ; If the image we want to work with does not exist on disk, then download it...
 If !FileExist("Gdip.tutorial.file-fish.bra")
 {
-	;AHK v1
-	;MsgBox, 48, File error!, Could not read file "Gdip.tutorial.file-fish.bra" in the current directory
-	MsgBox "File error!", "Could not read file 'Gdip.tutorial.file-fish.bra' in the current directory", 48
+	MsgBox "Could not read file 'Gdip.tutorial.file-fish.bra' in the current directory"
 	ExitApp
 }
 ; UrlDownloadToFile, http://www.autohotkey.net/~tic/Gdip.tutorial.file-fish.bra, Gdip.tutorial.file-fish.bra
 
 ; First you will need to read the BRA into a variable. It is now stored in the variable BRA
 If !(FileObject := FileOpen("Gdip.tutorial.file-fish.bra", "r")) {
-	;AHK v1
-	;MsgBox, 48, File error!, Error opening Gdip.tutorial.file-fish.bra for reading
-	MsgBox "File error!", "Error opening Gdip.tutorial.file-fish.bra for reading", 48
+	MsgBox "Error opening Gdip.tutorial.file-fish.bra for reading"
 	ExitApp
 }
 FileObject.RawRead(BRA, FileObject.Length)
@@ -98,9 +90,7 @@ pBitmap := Gdip_BitmapFromBRA(BRA, 1, 1)
 ; a negative number means that the function has returned an error
 If (pBitmap < 1)
 {
-	;AHK v1
-	;MsgBox, 48, File loading error!, Could not load the image specified! Error: %pBitmap%
-	MsgBox "File loading error!", "Could not load the image specified! Error: " pBitmap, 48
+	MsgBox "Could not load the image specified! Error: " pBitmap
 	ExitApp
 }
 
@@ -144,9 +134,7 @@ Font := "Arial"
 ; If they do not then we can do something about it. I choose to give a wraning and exit!
 If !Gdip_FontFamilyCreate(Font)
 {
-   ;AHK v1
-   ;MsgBox, 48, Font error!, The font you have specified does not exist on the system
-   MsgBox "Font error!", "The font you have specified does not exist on the system", 48
+   MsgBox "The font you have specified does not exist on the system"
    ExitApp
 }
 ; Delete font family as we now know the font does exist
@@ -209,6 +197,7 @@ UpdateTime:
 ;AHK v1
 ;FormatTime, Time
 Time := FormatTime()
+
 if (Time = OldTime)
 	return
 

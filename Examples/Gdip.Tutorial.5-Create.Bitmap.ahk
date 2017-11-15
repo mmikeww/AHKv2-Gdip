@@ -13,9 +13,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	;AHK v1
-	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
 	ExitApp
 }
 
@@ -83,9 +81,7 @@ Gdip_DeletePen(pPen)
 ; Bear in mind transparencies may be lost with some image formats and will appear black
 Gdip_SaveBitmapToFile(pBitmap, "File.png")
 
-;AHK v1
-;MsgBox, Bitmap saved as 'File.png'
-MsgBox "Bitmap saved as 'File.png'"
+MsgBox "Bitmap saved as 'File.png' "
 
 ; The bitmap can be deleted
 Gdip_DisposeImage(pBitmap)

@@ -13,9 +13,7 @@
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	;AHK v1
-	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	MsgBox "Gdiplus failed to start. Please ensure you have gdiplus on your system"
 	ExitApp
 }
 OnExit("ExitFunc")
@@ -30,24 +28,21 @@ OnExit("ExitFunc")
 ; I am first creating a slider, just as a way to change the percentage on the progress bar
 ; The progress bar needs to be added as a picture, as all we are doing is creating a gdi+ bitmap and setting it to this control
 ; Note we have set the 0xE style for it to accept an hBitmap later and also set a variable in order to reference it (could also use hwnd)
+; We will set the initial image on the control before showing the gui
 
 ;AHK v1
 ;Gui, 1: -DPIScale
 ;Gui, 1: Add, Slider, x10 y10 w400 Range0-100 vPercentage gSlider Tooltip, 50
 ;Gui, 1: Add, Picture, x10 y+30 w400 h50 0xE vProgressBar
+;GoSub Slider
+;Gui, 1: Show, AutoSize, Example 9 - gdi+ progress bar
 
 Gui1 := GuiCreate("-DPIScale")
 Gui1.OnEvent("Close", "Gui_Close")
 SliderObj := Gui1.Add("Slider", "x10 y10 w400 Range0-100 vPercentage Tooltip", 50)
 SliderObj.OnEvent("Change", "Slider_Change")
 PictureObj := Gui1.Add("Picture", "x10 y+30 w400 h50 0xE vProgressBar")
-
-; We will set the initial image on the control before showing the gui
-;GoSub Slider
 Gdip_SetProgress(PictureObj, 50, 0xff0993ea, 0xffbde5ff, "50`%")
-
-;AHK v1
-;Gui, 1: Show, AutoSize, Example 9 - gdi+ progress bar
 Gui1.Title := "Example 9 - gdi+ progress bar"
 Gui1.Show("AutoSize")
 Return
@@ -55,16 +50,16 @@ Return
 ;#######################################################################
 
 ; This subroutine is activated every time we move the slider as I used gSlider in the options of the slider
+;AHK v1
+;Slider:
+;	Gui, 1: Default
+;	Gui, 1: Submit, NoHide
+;	Gdip_SetProgress(ProgressBar, Percentage, 0xff0993ea, 0xffbde5ff, Percentage "`%")
+;Return
+
 Slider_Change(GuiCtrlObj, Info)
 {
-	;AHK v1
-	;Slider:
-	;Gui, 1: Default
-	;Gui, 1: Submit, NoHide
-	;Gdip_SetProgress(ProgressBar, Percentage, 0xff0993ea, 0xffbde5ff, Percentage "`%")
-
 	Gdip_SetProgress(GuiCtrlObj.Gui.Control["ProgressBar"], GuiCtrlObj.Value, 0xff0993ea, 0xffbde5ff, GuiCtrlObj.Value "`%")
-	Return
 }
 
 ;#######################################################################
