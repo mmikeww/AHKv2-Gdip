@@ -85,14 +85,12 @@ UpdateLayeredWindow(hwnd, hdc, x:="", y:="", w:="", h:="", Alpha:=255)
 	if ((x != "") && (y != ""))
 		VarSetCapacity(pt, 8), NumPut(x, pt, 0, "UInt"), NumPut(y, pt, 4, "UInt")
 	
-	if (w = "") ||(h = "")
+	if (w = "") || (h = "")
 	{ 
 		CreateRect( winRect, 0, 0, 0, 0 ) ;is 16 on both 32 and 64
-		DllCall( "GetWindowRect"
-		, Ptr, hwnd
-		, Ptr, &winRect )
-		w := NumGet( winRect, 0x8, "UInt" )
-		h := NumGet( winRect, 0xC, "UInt" )
+		DllCall( "GetWindowRect", Ptr, hwnd, Ptr, &winRect )
+		w := NumGet(winRect, 8, "UInt")  - NumGet(winRect, 0, "UInt")
+		h := NumGet(winRect, 12, "UInt") - NumGet(winRect, 4, "UInt")
 	}
 	
 	return DllCall("UpdateLayeredWindow"
@@ -237,7 +235,7 @@ SetStretchBltMode(hdc, iStretchMode:=4)
 SetImage(hwnd, hBitmap)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
-	E := DllCall( "SendMessage", Ptr, hwnd, "UInt", 0x172, Ptr, 0x0, hBitmap )
+	E := DllCall( "SendMessage", Ptr, hwnd, "UInt", 0x172, "UInt", 0x0, Ptr, hBitmap )
 	DeleteObject(E)
 	return E
 }
@@ -296,11 +294,9 @@ SetSysColorToControl(hwnd, SysColor:=15)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	CreateRect( winRect, 0, 0, 0, 0 ) ;is 16 on both 32 and 64
-	DllCall( "GetWindowRect"
-	, Ptr, hwnd
-	, Ptr, &winRect )
-	w := NumGet( winRect, 0x8, "UInt" ) 
-	h := NumGet( winRect, 0xc, "UInt" )
+	DllCall( "GetWindowRect", Ptr, hwnd, Ptr, &winRect )
+	w := NumGet(winRect, 8, "UInt")  - NumGet(winRect, 0, "UInt")
+	h := NumGet(winRect, 12, "UInt") - NumGet(winRect, 4, "UInt")
 	bc := DllCall("GetSysColor", "Int", SysColor, "UInt")
 	pBrushClear := Gdip_BrushCreateSolid(0xff000000 | (bc >> 16 | bc & 0xff00 | (bc & 0xff) << 16))
 	pBitmap := Gdip_CreateBitmap(w, h), G := Gdip_GraphicsFromImage(pBitmap)
@@ -343,11 +339,9 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 		if !WinExist("ahk_id " Screen)
 			return -2
 		CreateRect( winRect, 0, 0, 0, 0 ) ;is 16 on both 32 and 64
-		DllCall( "GetWindowRect"
-		, Ptr, hwnd
-		, Ptr, &winRect )
-		_w := NumGet( winRect, 0x8, "UInt" )
-		_h := NumGet( winRect, 0xC, "UInt" )
+		DllCall( "GetWindowRect", Ptr, Screen, Ptr, &winRect )
+		_w := NumGet(winRect, 8, "UInt")  - NumGet(winRect, 0, "UInt")
+		_h := NumGet(winRect, 12, "UInt") - NumGet(winRect, 4, "UInt")
 		_x := _y := 0
 		hhdc := GetDCEx(Screen, 3)
 	}
@@ -389,11 +383,9 @@ Gdip_BitmapFromHWND(hwnd)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	CreateRect( winRect, 0, 0, 0, 0 ) ;is 16 on both 32 and 64
-	DllCall( "GetWindowRect"
-	, Ptr, hwnd
-	, Ptr, &winRect )
-	Width := NumGet( winRect, 0x8, "UInt" )
-	Height:= NumGet( winRect, 0xC, "UInt" )
+	DllCall( "GetWindowRect", Ptr, hwnd, Ptr, &winRect )
+	Width := NumGet(winRect, 8, "UInt") - NumGet(winRect, 0, "UInt")
+	Height := NumGet(winRect, 12, "UInt") - NumGet(winRect, 4, "UInt")
 	hbm := CreateDIBSection(Width, Height), hdc := CreateCompatibleDC(), obm := SelectObject(hdc, hbm)
 	PrintWindow(hwnd, hdc)
 	pBitmap := Gdip_CreateBitmapFromHBITMAP(hbm)
@@ -2128,10 +2120,10 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 		return -1
 	
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
-	For eachStyle, valStyle in StrSplit( Syles, "|" )
+	For eachStyle, valStyle in StrSplit( Styles, "|" )
 	{
 		if RegExMatch(Options, "\b" valStyle)
-			Style |= (A_LoopField != "StrikeOut") ? (A_Index-1) : 8
+			Style |= (valStyle != "StrikeOut") ? (A_Index-1) : 8
 	}
 	
 	Align := 0, Alignments := "Near|Left|Centre|Center|Far|Right"
@@ -2333,9 +2325,9 @@ Gdip_AddPathPolygon(pPath, Points)
 
 	Points := StrSplit(Points, "|")
 	VarSetCapacity(PointF, 8*Points.Length())
-	Loop Points.Length()
+	for eachPoint, Point in Points
 	{
-		Coord := StrSplit(Points[A_Index], ",")
+		Coord := StrSplit(Point, ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
 
@@ -2636,7 +2628,9 @@ Gdip_PixelateBitmap(pBitmap, ByRef pBitmapOut, BlockSize)
 		)"
 
 		VarSetCapacity(PixelateBitmap, StrLen(MCode_PixelateBitmap)//2)
-		Loop StrLen(MCode_PixelateBitmap)//2		;%
+		nCount := StrLen(MCode_PixelateBitmap)//2
+		N := (A_AhkVersion < 2) ? nCount : "nCount"
+		Loop %N%
 			NumPut("0x" SubStr(MCode_PixelateBitmap, (2*A_Index)-1, 2), PixelateBitmap, A_Index-1, "UChar")
 		DllCall("VirtualProtect", Ptr, &PixelateBitmap, Ptr, VarSetCapacity(PixelateBitmap), "uint", 0x40, A_PtrSize ? "UPtr*" : "UInt*", 0)
 	}
