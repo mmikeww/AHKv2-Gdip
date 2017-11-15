@@ -62,8 +62,8 @@ Return
 DrawCircle:
 ; Get a random colour for the background and foreground of hatch style used to fill the ellipse,
 ; as well as random brush style, x and y coordinates and width/height
-Random, RandBackColour, 0x80000000, 0x7EEEEEEE
-Random, RandForeColour, 0x80000000, 0x7EEEEEEE
+Random, RandBackColour, 0x00000000, 0xffffffff
+Random, RandForeColour, 0x00000000, 0xffffffff
 Random, RandBrush, 0, 53
 Random, RandElipseWidth, 1, 200
 Random, RandElipseHeight, 1, 200
