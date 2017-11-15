@@ -73,16 +73,16 @@ DrawCircle:
 
 /*
 ;AHK v1
-Random, RandBackColour, 0x00000000, 0xffffffff
-Random, RandForeColour, 0x00000000, 0xffffffff
+Random, RandBackColour, 0.0, 0xffffffff
+Random, RandForeColour, 0.0, 0xffffffff
 Random, RandBrush, 0, 53
 Random, RandElipseWidth, 1, 200
 Random, RandElipseHeight, 1, 200
 Random, RandElipsexPos, %WALeft%, % WAWidth-RandElipseWidth
 Random, RandElipseyPos, %WATop%, % WAHeight-RandElipseHeight
 */
-RandBackColour := Random(0x00000000, 0xffffffff)
-RandForeColour := Random(0x00000000, 0xffffffff)
+RandBackColour := Random(0.0, 0xffffffff)
+RandForeColour := Random(0.0, 0xffffffff)
 RandBrush := Random(0, 53)
 RandElipseWidth := Random(1, 200)
 RandElipseHeight := Random(1, 200)
