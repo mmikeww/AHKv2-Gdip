@@ -3,18 +3,20 @@
 ;
 ; Tutorial to write text onto a gui
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-   MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
-   ExitApp
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
+	ExitApp
 }
 OnExit("ExitFunc")
 
@@ -22,10 +24,16 @@ OnExit("ExitFunc")
 Width := 300, Height := 200
 
 ; Create a layered window (+E0x80000 : must be used for UpdateLayeredWindow to work!) that is always on top (+AlwaysOnTop), has no taskbar entry or caption
-Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
-Gui, 1: Add, Edit, w%Width% h20 y300, vMeEdit
+;AHK v1
+;Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
+;Gui, 1: Add, Edit, w%Width% h20 y300 vMeEdit
+Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
+Gui1.Add("Edit", "w" Width " h20 y300 vMeEdit", "")
+
 ; Show the window
-Gui, 1: Show, NA
+;AHK v1
+;Gui, 1: Show, NA
+Gui1.Show("NA")
 
 ; Get a handle to this window we have created in order to update it later
 hwnd1 := WinExist()
@@ -62,8 +70,10 @@ Font := "Arial"
 ; If they do not then we can do something about it. I choose to give a wraning and exit!
 If !Gdip_FontFamilyCreate(Font)
 {
-   MsgBox, 48, Font error!, The font you have specified does not exist on the system
-   ExitApp
+	;AHK v1
+	;MsgBox, 48, Font error!, The font you have specified does not exist on the system
+	MsgBox "Font error!", "The font you have specified does not exist on the system", 48
+	ExitApp
 }
 
 ; There are a lot of things to cover with the function Gdip_TextToGraphics
@@ -131,7 +141,7 @@ Return
 ; The PostMessage will act on the last found window (this being the gui that launched the subroutine, hence the last parameter not being needed)
 WM_LBUTTONDOWN()
 {
-   PostMessage, 0xA1, 2
+   PostMessage 0xA1, 2
 }
 
 ;#######################################################################

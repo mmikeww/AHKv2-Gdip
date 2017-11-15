@@ -3,16 +3,18 @@
 ;
 ; Tutorial to demonstrate how to use BRA files, in this instance for animation
 
-; #SingleInstance, Force
+; #SingleInstance Force
 ; #NoEnv
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
 	ExitApp
 }
 ; On exiting the program we will go to Exit subroutine to clean up any resources
@@ -22,7 +24,9 @@ OnExit("AppExit")  ; Requires [v1.1.20+]
 ; I've added a simple new function here, just to ensure if anyone is having any problems then to make sure they are using the correct library version
 if (Gdip_LibrarySubVersion() < 1.50)
 {
-	MsgBox, 48, version error!, This example requires v1.50 of the Gdip library
+	;AHK v1
+	;MsgBox, 48, version error!, This example requires v1.50 of the Gdip library
+	MsgBox "version error!", "This example requires v1.50 of the Gdip library", 48
 	ExitApp
 }
 
@@ -36,8 +40,11 @@ WAWidth  := WARight - WALeft
 WAHeight := WABottom- WATop
 
 ; Create our gui with WS_EX_LAYERED style = 0x80000
-Gui, 1: -Caption +E0x80000 +LastFound +OwnDialogs +Owner
-Gui, 1: Show, NA
+;AHK v1
+;Gui, 1: -Caption +E0x80000 +LastFound +OwnDialogs +Owner
+;Gui, 1: Show, NA
+Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +OwnDialogs +Owner")
+Gui1.Show("NA")
 
 ; Get a handle to this window
 hwnd1 := WinExist()
@@ -55,14 +62,18 @@ hwnd1 := WinExist()
 ; If the image we want to work with does not exist on disk, then download it...
 If !FileExist("Gdip.tutorial.file-fish.bra")
 {
-	MsgBox, 48, File error!, Could not read file "Gdip.tutorial.file-fish.bra" in the current directory
+	;AHK v1
+	;MsgBox, 48, File error!, Could not read file "Gdip.tutorial.file-fish.bra" in the current directory
+	MsgBox "File error!", "Could not read file 'Gdip.tutorial.file-fish.bra' in the current directory", 48
 	ExitApp
 }
 ; UrlDownloadToFile, http://www.autohotkey.net/~tic/Gdip.tutorial.file-fish.bra, Gdip.tutorial.file-fish.bra
 
 ; First you will need to read the BRA into a variable. It is now stored in the variable BRA
 If !(FileObject := FileOpen("Gdip.tutorial.file-fish.bra", "r")) {
-	MsgBox, 48, File error!, Error opening Gdip.tutorial.file-fish.bra for reading
+	;AHK v1
+	;MsgBox, 48, File error!, Error opening Gdip.tutorial.file-fish.bra for reading
+	MsgBox "File error!", "Error opening Gdip.tutorial.file-fish.bra for reading", 48
 	ExitApp
 }
 FileObject.RawRead(BRA, FileObject.Length)
@@ -87,7 +98,9 @@ pBitmap := Gdip_BitmapFromBRA(BRA, 1, 1)
 ; a negative number means that the function has returned an error
 If (pBitmap < 1)
 {
-	MsgBox, 48, File loading error!, Could not load the image specified! Error: %pBitmap%
+	;AHK v1
+	;MsgBox, 48, File loading error!, Could not load the image specified! Error: %pBitmap%
+	MsgBox "File loading error!", "Could not load the image specified! Error: " pBitmap, 48
 	ExitApp
 }
 
@@ -131,7 +144,9 @@ Font := "Arial"
 ; If they do not then we can do something about it. I choose to give a wraning and exit!
 If !Gdip_FontFamilyCreate(Font)
 {
-   MsgBox, 48, Font error!, The font you have specified does not exist on the system
+   ;AHK v1
+   ;MsgBox, 48, Font error!, The font you have specified does not exist on the system
+   MsgBox "Font error!", "The font you have specified does not exist on the system", 48
    ExitApp
 }
 ; Delete font family as we now know the font does exist
@@ -176,9 +191,12 @@ UpdateLayeredWindow(hwnd1, hdc, (WAWidth-WinWidth)//2, (WAHeight-WinHeight)//2, 
 ; Set the timers
 ; UpdateTime to draw the time onto the gui
 ; Play to change the image for the fish video
-GoSub, UpDateTime
-SetTimer, UpdateTime, 950
-SetTimer, Play, 70
+GoSub UpDateTime
+;AHK v1
+;SetTimer, UpdateTime, 950
+;SetTimer, Play, 70
+SetTimer "UpdateTime", 950
+SetTimer "Play", 70
 return
 
 ;######################################################################
@@ -188,7 +206,9 @@ UpdateTime:
 ; We should probably put critical here so that it isnt interrupted, but the subroutines are so quick that its very unlikely
 
 ; Get the time in the format of 16:05 06 January 2010 (oops...caught me commenting this at work!)
-FormatTime, Time
+;AHK v1
+;FormatTime, Time
+Time := FormatTime()
 if (Time = OldTime)
 	return
 
@@ -248,7 +268,9 @@ Fade(InOut)
 	Trans := (InOut = "In") ? 0 : 0.8
 
 	; Loop the number of times until it is at the specified opacity
-	Loop, % 0.8/0.05		;%
+	numLoops := 0.8/0.05
+	N := (A_AhkVersion < 2) ? numLoops : "numLoops"
+	Loop %N%
 	{
 		; Clip to the area we are drawing for the fish, so that only this rectangle gets drawn to
 		; We could do this once at the top of this function, but it is safer to do it each loop so that nothing else can modify it during the sleep
@@ -281,7 +303,7 @@ Fade(InOut)
 		Gdip_ResetClip(G)
 
 		; A sleep to match the length of the Play timer
-		Sleep, 70
+		Sleep 70
 	}
 
 	; If we have reached the end of the video then put it back to the beginning after the fade
@@ -324,7 +346,7 @@ return
 ; Our function for WM_LBUTTONDOWN allowing us to drag. works on last found window
 WM_LBUTTONDOWN()
 {
-	PostMessage, 0xA1, 2
+	PostMessage 0xA1, 2
 }
 
 ;#######################################################################

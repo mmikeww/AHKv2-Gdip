@@ -3,44 +3,57 @@
 ;
 ; Tutorial to rotate, flip or mirror an image
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
 	ExitApp
 }
 OnExit("ExitFunc")
 
+; Gui 1
 ; Create a gui where we can select the file we want to rotate, the angle to rotate it by and whether we want to flip it
-Gui, 1: +ToolWindow +AlwaysOnTop
-Gui, 1: Add, Edit, x10 y10 w300 r1 vFile, %A_ScriptDir%\MJ.jpg
-Gui, 1: Add, Button, x+10 yp+0 w75 gGo Default, &Go
-
 ; Here is the slider allowing rotation between 0 and 360 degrees
-Gui, 1: Add, Slider, x10 y+10 w300 Tooltip vAngle Range0-360, 0
-
 ; Create 2 checkboxes, to select whether we want to flip it horizontally or vertically
-Gui, 1: Add, CheckBox, x+10 yp+0 vHorizontal, Flip horizontally
-Gui, 1: Add, CheckBox, x+10 yp+0 vVertical, Flip vertically
-
-Gui, 1: Show, x0 y0 AutoSize
-
+; Gui 2
 ; Create a layered window (+E0x80000 : must be used for UpdateLayeredWindow to work!) that is always on top (+AlwaysOnTop), has no taskbar entry or caption
 ; This will be used as the 2nd gui so that we can show our image on it
-Gui, 2: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
 
-; Show the window
-Gui, 2: Show, NA
+;AHK v1
+;Gui, 1: +ToolWindow +AlwaysOnTop
+;Gui, 1: Add, Edit, x10 y10 w300 r1 vFile, %A_ScriptDir%\MJ.jpg
+;Gui, 1: Add, Button, x+10 yp+0 w75 gGo Default, &Go
+;Gui, 1: Add, Slider, x10 y+10 w300 Tooltip vAngle Range0-360, 0
+;Gui, 1: Add, CheckBox, x+10 yp+0 vHorizontal, Flip horizontally
+;Gui, 1: Add, CheckBox, x+10 yp+0 vVertical, Flip vertically
+;Gui, 1: Show, x0 y0 AutoSize
+;Gui, 2: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
+;Gui, 2: Show, NA
+
+Gui1 := GuiCreate("+ToolWindow +AlwaysOnTop")
+Gui1.OnEvent("Close", "Gui_Close")
+Gui1.Add("Edit", "x10 y10 w300 r1 vFile", A_ScriptDir "\MJ.jpg")
+ButtonObj := Gui1.Add("Button", "x+10 yp+0 w75 Default", "Go")
+ButtonObj.OnEvent("Click", "ButtonGo_Click")
+Gui1.Add("Slider", "x10 y+10 w300 Tooltip vAngle Range0-360", 0)
+Gui1.Add("CheckBox", "x+10 yp+0 vHorizontal", "Flip horizontally")
+Gui1.Add("CheckBox", "x+10 yp+0 vVertical", "Flip vertically")
+Gui1.Show("x0 y0 AutoSize")
+Gui2 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
+Gui2.Name := "Holder"
+Gui2.Show("NA")
 
 ; Get a handle to this window we have created in order to update it later
-hwnd2 := WinExist()
+global hwnd2 := WinExist()
 
 ; By placing this OnMessage here. The function WM_LBUTTONDOWN will be called every time the user left clicks on the gui. This can be used for dragging the image
 OnMessage(0x201, "WM_LBUTTONDOWN")
@@ -48,15 +61,23 @@ Return
 
 ;#####################################################################
 
-Go:
-
+ButtonGo_Click(GuiCtrlObj, Info)
+{
 ; Submit the variables to see the degress to rotate by and whether to flip the image
-Gui, 1: +OwnDialogs
-Gui, 1: Submit, NoHide
+;AHK v1
+;Go:
+;Gui, 1: +OwnDialogs
+;Gui, 1: Submit, NoHide
+GuiCtrlObj.Gui.Opt("+OwnDialogs")
+GuiCtrlObj.Gui.Submit(false)
+File := GuiCtrlObj.Gui.Control["File"].Value
+Angle := GuiCtrlObj.Gui.Control["Angle"].Value
+Horizontal := GuiCtrlObj.Gui.Control["Horizontal"].Value
+Vertical := GuiCtrlObj.Gui.Control["Vertical"].Value
 
 ; If the file in the edit field is not a valid image then return
 If !pBitmap := Gdip_CreateBitmapFromFile(File)
-Return
+	Return
 
 ; We should get the width and height of the image, in case it is too big for the screen then we can resize it to fit nicely
 OriginalWidth := Gdip_GetImageWidth(pBitmap), OriginalHeight := Gdip_GetImageHeight(pBitmap)
@@ -71,7 +92,7 @@ If (OriginalWidth >= A_ScreenWidth//2) || (OriginalHeight >= A_ScreenHeight//2)
 	Height := A_ScreenHeight//2, Width := Height*Ratio
 }
 Else
-Width := OriginalWidth, Height := OriginalHeight
+	Width := OriginalWidth, Height := OriginalHeight
 
 ; Width and Height now contain the new dimensions the image on screen will be
 
@@ -134,23 +155,34 @@ SelectObject(hdc, obm), DeleteObject(hbm), DeleteDC(hdc)
 ; We will then dispose of the graphics and bitmap we created
 Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmap)
 Return
+}
 
 ;#####################################################################
 
 ; This is the function to allow the user to drag the image drawn on the screen (this being gui 2)
-WM_LBUTTONDOWN()
+WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 {
-	If (A_Gui = 2)
-	PostMessage, 0xA1, 2
+	;AHK v1
+	;If (A_Gui = 2)
+		;PostMessage 0xA1, 2
+
+	Gui := GuiFromHwnd(hwnd)
+	GuiControl := GuiCtrlFromHwnd(hwnd)
+	if GuiControl
+		Gui := GuiControl.Gui
+	If (Gui.Name = "Holder")
+		PostMessage 0xA1, 2
 }
 
 ;#####################################################################
 
 ; If the user closes the gui or closes the program then we want to shut down gdi+ and exit the application
 Esc::
+Gui_Close() {
 GuiClose:
    ExitApp
 return
+}
 
 ExitFunc()
 {

@@ -3,17 +3,19 @@
 ;
 ; Tutorial to fill the screen with randomly hatched ellipses
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
 	ExitApp
 }
 OnExit("ExitFunc")
@@ -30,10 +32,14 @@ WAWidth := M.WARight-M.WALeft
 WAHeight := M.WABottom-M.WATop
 
 ; Create a layered window (+E0x80000) that is always on top (+AlwaysOnTop), has no taskbar entry or caption
-Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
+;AHK v1
+;Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
+Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
 
 ; Show the window
-Gui, 1: Show, NA
+;AHK v1
+;Gui, 1: Show, NA
+Gui1.Show("NA")
 
 ; Get a handle to this window we have created in order to update it later
 hwnd1 := WinExist()
@@ -54,7 +60,9 @@ G := Gdip_GraphicsFromHDC(hdc)
 Gdip_SetSmoothingMode(G, 4)
 
 ; Set a timer to draw a new ellipse every 200ms
-SetTimer, DrawCircle, 200
+;AHK v1
+;SetTimer DrawCircle, 200
+SetTimer "DrawCircle", 200
 Return
 
 ;#######################################################################
@@ -62,13 +70,24 @@ Return
 DrawCircle:
 ; Get a random colour for the background and foreground of hatch style used to fill the ellipse,
 ; as well as random brush style, x and y coordinates and width/height
+
+/*
+;AHK v1
 Random, RandBackColour, 0x00000000, 0xffffffff
 Random, RandForeColour, 0x00000000, 0xffffffff
 Random, RandBrush, 0, 53
 Random, RandElipseWidth, 1, 200
 Random, RandElipseHeight, 1, 200
-Random, RandElipsexPos, %WALeft%, % WAWidth-RandElipseWidth			;%
-Random, RandElipseyPos, %WATop%, % WAHeight-RandElipseHeight		;%
+Random, RandElipsexPos, %WALeft%, % WAWidth-RandElipseWidth
+Random, RandElipseyPos, %WATop%, % WAHeight-RandElipseHeight
+*/
+RandBackColour := Random(0x00000000, 0xffffffff)
+RandForeColour := Random(0x00000000, 0xffffffff)
+RandBrush := Random(0, 53)
+RandElipseWidth := Random(1, 200)
+RandElipseHeight := Random(1, 200)
+RandElipsexPos := Random(WALeft, WAWidth-RandElipseWidth)
+RandElipseyPos := Random(WATop, WAHeight-RandElipseHeight)
 
 ; Create the random brush
 pBrush := Gdip_BrushCreateHatch(RandBackColour, RandForeColour, RandBrush)

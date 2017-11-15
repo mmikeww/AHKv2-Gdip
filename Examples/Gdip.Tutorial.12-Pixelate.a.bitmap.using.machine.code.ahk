@@ -3,24 +3,29 @@
 ;
 ; Tutorial to pixelate a bitmap using machine code
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-   MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+   ;AHK v1
+   ;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+   MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
    ExitApp
 }
 OnExit("ExitFunc")
 
 ; Create a layered window that is always on top as usual and get a handle to the window
-Gui, 1: -Caption +E0x80000 +LastFound +OwnDialogs +Owner +AlwaysOnTop
-Gui, 1: Show, NA
+;AHK v1
+;Gui, 1: -Caption +E0x80000 +LastFound +OwnDialogs +Owner +AlwaysOnTop
+;Gui, 1: Show, NA
+Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +OwnDialogs +Owner +AlwaysOnTop")
+Gui1.Show("NA")
 hwnd1 := WinExist()
 
 ; Get a bitmap from the image
@@ -29,7 +34,9 @@ If FileExist("MJ.jpg")
 ;pBitmap := Gdip_BitmapFromScreen()
 If !pBitmap
 {
-	MsgBox, 48, File loading error!, Could not load the image 'MJ.jpg'
+	;AHK v1
+	;MsgBox, 48, File loading error!, Could not load the image 'MJ.jpg'
+	MsgBox "File loading error!", "Could not load the image 'MJ.jpg'", 48
 	ExitApp
 }
 ; Get the width and height of the bitmap we have just created from the file
@@ -50,7 +57,9 @@ OnMessage(0x201, "WM_LBUTTONDOWN")
 UpdateLayeredWindow(hwnd1, hdc, (A_ScreenWidth-Width)//2, (A_ScreenHeight-Height)//2, Width, Height)
 
 ; Set a timer to update the gui with our pixelated bitmap
-SetTimer, Update, 50
+;AHK v1
+;SetTimer, Update, 50
+SetTimer "Update", 50
 return
 
 ;#######################################################################
@@ -83,7 +92,7 @@ return
 ; This is called on left click to allow to drag
 WM_LBUTTONDOWN()
 {
-   PostMessage, 0xA1, 2
+   PostMessage 0xA1, 2
 }
 
 ;#######################################################################

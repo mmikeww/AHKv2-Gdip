@@ -3,17 +3,19 @@
 ;
 ; Example to create a progress bar in a standard gui
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
 	ExitApp
 }
 OnExit("ExitFunc")
@@ -25,26 +27,45 @@ OnExit("ExitFunc")
 ; This will be slower, but will use less RAM and will be modular (can all be put into a function)
 ; I will go with the 2nd option, but if more speed is a requirement then choose the 1st
 
-Gui, 1: -DPIScale
 ; I am first creating a slider, just as a way to change the percentage on the progress bar
-Gui, 1: Add, Slider, x10 y10 w400 Range0-100 vPercentage gSlider Tooltip, 50
-
 ; The progress bar needs to be added as a picture, as all we are doing is creating a gdi+ bitmap and setting it to this control
 ; Note we have set the 0xE style for it to accept an hBitmap later and also set a variable in order to reference it (could also use hwnd)
-Gui, 1: Add, Picture, x10 y+30 w400 h50 0xE vProgressBar
+
+;AHK v1
+;Gui, 1: -DPIScale
+;Gui, 1: Add, Slider, x10 y10 w400 Range0-100 vPercentage gSlider Tooltip, 50
+;Gui, 1: Add, Picture, x10 y+30 w400 h50 0xE vProgressBar
+
+Gui1 := GuiCreate("-DPIScale")
+Gui1.OnEvent("Close", "Gui_Close")
+SliderObj := Gui1.Add("Slider", "x10 y10 w400 Range0-100 vPercentage Tooltip", 50)
+SliderObj.OnEvent("Change", "Slider_Change")
+PictureObj := Gui1.Add("Picture", "x10 y+30 w400 h50 0xE vProgressBar")
+
 ; We will set the initial image on the control before showing the gui
-GoSub, Slider
-Gui, 1: Show, AutoSize, Example 9 - gdi+ progress bar
+;GoSub Slider
+Gdip_SetProgress(PictureObj, 50, 0xff0993ea, 0xffbde5ff, "50`%")
+
+;AHK v1
+;Gui, 1: Show, AutoSize, Example 9 - gdi+ progress bar
+Gui1.Title := "Example 9 - gdi+ progress bar"
+Gui1.Show("AutoSize")
 Return
 
 ;#######################################################################
 
 ; This subroutine is activated every time we move the slider as I used gSlider in the options of the slider
-Slider:
-Gui, 1: Default
-Gui, 1: Submit, NoHide
-Gdip_SetProgress(ProgressBar, Percentage, 0xff0993ea, 0xffbde5ff, Percentage "`%")
-Return
+Slider_Change(GuiCtrlObj, Info)
+{
+	;AHK v1
+	;Slider:
+	;Gui, 1: Default
+	;Gui, 1: Submit, NoHide
+	;Gdip_SetProgress(ProgressBar, Percentage, 0xff0993ea, 0xffbde5ff, Percentage "`%")
+
+	Gdip_SetProgress(GuiCtrlObj.Gui.Control["ProgressBar"], GuiCtrlObj.Value, 0xff0993ea, 0xffbde5ff, GuiCtrlObj.Value "`%")
+	Return
+}
 
 ;#######################################################################
 
@@ -52,8 +73,13 @@ Gdip_SetProgress(ByRef Variable, Percentage, Foreground, Background:=0x00000000,
 {
 	; We first want the hwnd (handle to the picture control) so that we know where to put the bitmap we create
 	; We also want to width and height (posw and Posh)
-	GuiControlGet, Pos, Pos, Variable
-	GuiControlGet, hwnd, hwnd, Variable
+
+	;AHK v1
+	;GuiControlGet, Pos, Pos, Variable
+	;GuiControlGet, hwnd, hwnd, Variable
+	Posw := Variable.Pos.w
+	Posh := Variable.Pos.h
+	hwnd := Variable.hwnd
 
 	; Create 2 brushes, one for the background and one for the foreground. Remember this is in ARGB
 	pBrushFront := Gdip_BrushCreateSolid(Foreground), pBrushBack := Gdip_BrushCreateSolid(Background)
@@ -88,14 +114,16 @@ Gdip_SetProgress(ByRef Variable, Percentage, Foreground, Background:=0x00000000,
 	; Then we can delete the graphics, our gdi+ bitmap and the gdi bitmap
 	Gdip_DeleteBrush(pBrushFront), Gdip_DeleteBrush(pBrushBack)
 	Gdip_DeleteGraphics(G), Gdip_DisposeImage(pBitmap), DeleteObject(hBitmap)
-	Return, 0
+	Return 0
 }
 
 ;#######################################################################
 
+Gui_Close() {
 GuiClose:
    ExitApp
 return
+}
 
 ExitFunc()
 {

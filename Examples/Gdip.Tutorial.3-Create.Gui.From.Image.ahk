@@ -4,26 +4,32 @@
 ; Tutorial to take make a gui from an existing image on disk
 ; For the example we will use png as it can handle transparencies. The image will also be halved in size
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
 	ExitApp
 }
 OnExit("ExitFunc")
 
 ; Create a layered window (+E0x80000 : must be used for UpdateLayeredWindow to work!) that is always on top (+AlwaysOnTop), has no taskbar entry or caption
-Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
+;AHK v1
+;Gui, 1: -Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
+Gui1 := GuiCreate("-Caption +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs")
 
 ; Show the window
-Gui, 1: Show, NA
+;AHK v1
+;Gui, 1: Show, NA
+Gui1.Show("NA")
 
 ; Get a handle to this window we have created in order to update it later
 hwnd1 := WinExist()
@@ -34,7 +40,9 @@ pBitmap := Gdip_CreateBitmapFromFile("background.png")
 ; Check to ensure we actually got a bitmap from the file, in case the file was corrupt or some other error occured
 If !pBitmap
 {
-	MsgBox, 48, File loading error!, Could not load 'background.png'
+	;AHK v1
+	;MsgBox, 48, File loading error!, Could not load 'background.png'
+	MsgBox "File loading error!", "Could not load 'background.png'", 48
 	ExitApp
 }
 

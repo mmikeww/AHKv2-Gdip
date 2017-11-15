@@ -3,12 +3,12 @@
 ;
 ; Example to take files from disk, load them onto a background and save back to disk
 
-#SingleInstance, Force
+#SingleInstance Force
 ;#NoEnv
-;SetBatchLines, -1
+;SetBatchLines -1
 
 ; Uncomment if Gdip.ahk is not in your standard library
-#Include, ../Gdip_All.ahk
+#Include ../Gdip_All.ahk
 
 ; Specify both of the files we are going to use
 File1 := "needle.png"
@@ -17,14 +17,18 @@ File2 := "background.png"
 ; Start gdi+
 If !pToken := Gdip_Startup()
 {
-	MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	;AHK v1
+	;MsgBox 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+	MsgBox "gdiplus error!", "Gdiplus failed to start. Please ensure you have gdiplus on your system", 48
 	ExitApp
 }
 
 ; If the images we want to work with do not exist on disk, then download them...
 If !(FileExist(File1) && FileExist(File2))
 {
-	MsgBox, Cannot find files 'needle.png' and 'background.png' in this same directory
+	;AHK v1
+	;MsgBox, Cannot find files 'needle.png' and 'background.png' in this same directory
+	MsgBox "Cannot find files 'needle.png' and 'background.png' in this same directory"
 	ExitApp
 }
 
@@ -70,7 +74,9 @@ Gdip_DisposeImage(pBitmapFile1), Gdip_DisposeImage(pBitmapFile2)
 ; Bear in mind transparencies may be lost with some image formats and will appear black
 Gdip_SaveBitmapToFile(pBitmap, "FinalImage.png")
 
-MsgBox, Image saved as 'FinalImage.png'
+;AHK v1
+;MsgBox, Image saved as 'FinalImage.png'
+MsgBox "Image saved as 'FinalImage.png'"
 
 ; The bitmap can be deleted
 Gdip_DisposeImage(pBitmap)
