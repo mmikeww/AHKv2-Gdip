@@ -1337,7 +1337,7 @@ Gdip_SetImageAttributesColorMatrix(Matrix)
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
 	VarSetCapacity(ColourMatrix, 100, 0)
-	Matrix := RegExReplace(RegExReplace(Matrix, "^[^\d-\.]+([\d\.])", "$1", "", 1), "[^\d-\.]+", "|")
+	Matrix := RegExReplace(RegExReplace(Matrix, "^[^\d-\.]+([\d\.])", "$1", , 1), "[^\d-\.]+", "|")
 	Matrix := StrSplit(Matrix, "|")
 	Loop 25
 	{
@@ -1379,6 +1379,8 @@ Gdip_GraphicsFromImage(pBitmap)
 
 Gdip_GraphicsFromHDC(hdc)
 {
+	pGraphics := ""
+
 	DllCall("gdiplus\GdipCreateFromHDC", A_PtrSize ? "UPtr" : "UInt", hdc, A_PtrSize ? "UPtr*" : "UInt*", pGraphics)
 	return pGraphics
 }
