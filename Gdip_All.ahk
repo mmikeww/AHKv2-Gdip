@@ -2816,7 +2816,7 @@ GetPrimaryMonitor()
 ; Enumerates display monitors and returns an object containing the properties of all monitors or the specified monitor.
 ; ======================================================================================================================
 MDMF_Enum(HMON := "") {
-	Static EnumProc := RegisterCallback("MDMF_EnumProc")
+	Static EnumProc := CallbackCreate("MDMF_EnumProc")
 	Static Monitors := {}
 	If (HMON = "") ; new enumeration
 		Monitors := {}
