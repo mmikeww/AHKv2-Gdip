@@ -346,7 +346,7 @@ Gdip_BitmapFromScreen(Screen:=0, Raster:="")
 		_x := _y := 0
 		hhdc := GetDCEx(Screen, 3)
 	}
-	else if (Screen&1 != "")
+	else if IsInteger(Screen)
 	{
 		M := GetMonitorInfo(Screen)
 		_x := M.Left, _y := M.Top, _w := M.Right-M.Left, _h := M.Bottom-M.Top
@@ -1206,7 +1206,7 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
 
-	if (Matrix&1 = "")
+	if !IsNumber(Matrix)
 		ImageAttr := Gdip_SetImageAttributesColorMatrix(Matrix)
 	else if (Matrix != 1)
 		ImageAttr := Gdip_SetImageAttributesColorMatrix("1|0|0|0|0|0|1|0|0|0|0|0|1|0|0|0|0|0|" Matrix "|0|0|0|0|0|1")
@@ -1277,7 +1277,7 @@ Gdip_DrawImage(pGraphics, pBitmap, dx:="", dy:="", dw:="", dh:="", sx:="", sy:="
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
-	if (Matrix&1 = "")
+	if !IsNumber(Matrix)
 		ImageAttr := Gdip_SetImageAttributesColorMatrix(Matrix)
 	else if (Matrix != 1)
 		ImageAttr := Gdip_SetImageAttributesColorMatrix("1|0|0|0|0|0|1|0|0|0|0|0|1|0|0|0|0|0|" Matrix "|0|0|0|0|0|1")
@@ -2781,6 +2781,12 @@ IsInteger(Var) {
 	Return False
 }
 
+IsNumber(Var) {
+	Static number := "number"
+	If Var Is number
+		Return True
+	Return False
+}
 
 
 
