@@ -179,7 +179,7 @@ UpdateLayeredWindow(hwnd1, hdc, (WAWidth-WinWidth)//2, (WAHeight-WinHeight)//2, 
 ; Set the timers
 ; UpdateTime to draw the time onto the gui
 ; Play to change the image for the fish video
-GoSub UpDateTime
+UpdateTime()
 ;AHK v1
 ;SetTimer, UpdateTime, 950
 ;SetTimer, Play, 70
@@ -189,6 +189,9 @@ return
 
 ;######################################################################
 
+UpdateTime()
+{
+global
 UpdateTime:
 
 ; We should probably put critical here so that it isnt interrupted, but the subroutines are so quick that its very unlikely
@@ -229,6 +232,7 @@ Gdip_ResetClip(G)
 ; Save the time so that we dont redraw until the time changes
 OldTime := Time
 return
+}
 
 ;######################################################################
 
@@ -302,6 +306,9 @@ Fade(InOut)
 
 ;#######################################################################
 
+Play()
+{
+global
 Play:
 ; Check if we need to fade in or whether we are close enough to the end to have to fade out
 if (Index = 0)
@@ -329,6 +336,7 @@ else
 	Gdip_ResetClip(G)
 }
 return
+}
 
 ;#######################################################################
 

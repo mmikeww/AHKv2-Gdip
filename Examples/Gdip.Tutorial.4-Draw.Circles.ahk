@@ -62,6 +62,9 @@ Return
 
 ;#######################################################################
 
+DrawCircle()
+{
+global
 DrawCircle:
 ; Get a random colour for the background and foreground of hatch style used to fill the ellipse,
 ; as well as random brush style, x and y coordinates and width/height
@@ -96,6 +99,7 @@ UpdateLayeredWindow(hwnd1, hdc, WALeft, WATop, WAWidth, WAHeight)
 ; Delete the brush as it is no longer needed and wastes memory
 Gdip_DeleteBrush(pBrush)
 Return
+}
 
 ;#######################################################################
 

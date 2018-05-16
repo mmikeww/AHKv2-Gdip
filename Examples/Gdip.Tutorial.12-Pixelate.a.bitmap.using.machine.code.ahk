@@ -60,6 +60,9 @@ return
 
 ;#######################################################################
 
+Update()
+{
+global
 Update:
 ; Some simple checks to see if we are increasing or decreasing the pixelation
 ; v is the block size of the pixelation and dir is the direction (inc/decreasing)
@@ -82,6 +85,7 @@ Gdip_DrawImage(G, pBitmapOut, 0, 0, Width, Height, 0, 0, Width, Height)
 ; We can now update our window, and don't need to provide a position or dimensions as we don't want them to change
 UpdateLayeredWindow(hwnd1, hdc)
 return
+}
 
 ;#######################################################################
 
