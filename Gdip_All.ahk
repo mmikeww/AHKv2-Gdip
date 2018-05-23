@@ -2146,14 +2146,14 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 	Style := 0, Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
 	For eachStyle, valStyle in StrSplit( Styles, "|" )
 	{
-		if RegExMatch(Options, "\b" valStyle)
+		if RegExMatch(Options, "i)\b" valStyle)
 			Style |= (valStyle != "StrikeOut") ? (A_Index-1) : 8
 	}
 
 	Align := 0, Alignments := "Near|Left|Centre|Center|Far|Right"
 	For eachAlignment, valAlignment in StrSplit( Alignments, "|" )
 	{
-		if RegExMatch(Options, "\b" valAlignment)
+		if RegExMatch(Options, "i)\b" valAlignment)
 			Align |= A_Index//2.1	; 0|0|1|1|2|2
 	}
 
