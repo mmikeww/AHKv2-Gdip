@@ -2181,14 +2181,17 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 
 	if vPos
 	{
+		if RegExMatch(vPos[0], "^(?i:vCentre|vCenter|Bottom|Down)$") && !IHeight
+			return -7
+
 		ReturnRC := StrSplit(ReturnRC, "|")
 
 		if (vPos[0] = "vCentre") || (vPos[0] = "vCenter")
-			ypos += (Height-ReturnRC[4])//2
+			ypos := (IHeight-ReturnRC[4])//2
 		else if (vPos[0] = "Top") || (vPos[0] = "Up")
 			ypos := 0
 		else if (vPos[0] = "Bottom") || (vPos[0] = "Down")
-			ypos := Height-ReturnRC[4]
+			ypos := IHeight-ReturnRC[4]
 
 		CreateRectF(RC, xpos, ypos, Width, ReturnRC[4])
 		ReturnRC := Gdip_MeasureString(pGraphics, Text, hFont, hFormat, RC)
