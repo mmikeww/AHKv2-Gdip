@@ -809,6 +809,42 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate := 0) {
 
 ;#####################################################################################
 
+; Function:				Gdip_BitmapFromBase64
+; Description:			Creates a bitmap from a Base64 encoded string
+;
+; Base64				ByRef variable. Base64 encoded string. Immutable, ByRef to avoid performance overhead of passing long strings.
+;
+; return				If the function succeeds, the return value is a pointer to a bitmap, otherwise:
+;						-1 = Could not calculate the length of the required buffer
+;						-2 = Could not decode the Base64 encoded string
+;						-3 = Could not create a memory stream
+
+Gdip_BitmapFromBase64(ByRef Base64)
+{
+	Ptr := A_PtrSize ? "UPtr" : "UInt"
+
+	; calculate the length of the buffer needed
+	if !(DllCall("crypt32\CryptStringToBinary", Ptr, &Base64, "UInt", 0, "UInt", 0x01, Ptr, 0, "UIntP", DecLen, Ptr, 0, Ptr, 0))
+		return -1
+
+	VarSetCapacity(Dec, DecLen, 0)
+
+	; decode the Base64 encoded string
+	if !(DllCall("crypt32\CryptStringToBinary", Ptr, &Base64, "UInt", 0, "UInt", 0x01, Ptr, &Dec, "UIntP", DecLen, Ptr, 0, Ptr, 0))
+		return -2
+
+	; create a memory stream
+	if !(pStream := DllCall("shlwapi\SHCreateMemStream", Ptr, &Dec, "UInt", DecLen, "UPtr"))
+		return -3
+
+	DllCall("gdiplus\GdipCreateBitmapFromStreamICM", Ptr, pStream, "PtrP", pBitmap)
+	ObjRelease(pStream)
+
+	return pBitmap
+}
+
+;#####################################################################################
+
 ; Function				Gdip_DrawRectangle
 ; Description			This function uses a pen to draw the outline of a rectangle into the Graphics of a bitmap
 ;
