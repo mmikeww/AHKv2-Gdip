@@ -541,6 +541,48 @@ DestroyIcon(hIcon)
 
 ;#####################################################################################
 
+; Function:				GetIconDimensions
+; Description:			Retrieves a given icon/cursor's width and height 
+;
+; hIcon					Pointer to an icon or cursor
+; Width					ByRef variable. This variable is set to the icon's width
+; Height				ByRef variable. This variable is set to the icon's height
+;
+; return				If the function succeeds, the return value is zero, otherwise:
+;						-1 = Could not retrieve the icon's info. Check A_LastError for extended information
+;						-2 = Could not delete the icon's bitmask bitmap
+;						-3 = Could not delete the icon's color bitmap
+
+GetIconDimensions(hIcon, ByRef Width, ByRef Height) {
+	Ptr := A_PtrSize ? "UPtr" : "UInt"
+	Width := Height := 0
+
+	VarSetCapacity(ICONINFO, size := 16 + 2 * A_PtrSize, 0)
+
+	if !DllCall("user32\GetIconInfo", Ptr, hIcon, Ptr, &ICONINFO)
+		return -1
+	
+	hbmMask := NumGet(&ICONINFO, 16, Ptr)
+	hbmColor := NumGet(&ICONINFO, 16 + A_PtrSize, Ptr)
+	VarSetCapacity(BITMAP, size, 0)
+
+	if DllCall("gdi32\GetObject", Ptr, hbmColor, "Int", size, Ptr, &BITMAP)
+	{
+		Width := NumGet(&BITMAP, 4, "Int")
+		Height := NumGet(&BITMAP, 8, "Int")
+	}
+
+	if !DllCall("gdi32\DeleteObject", Ptr, hbmMask)
+		return -2
+	
+	if !DllCall("gdi32\DeleteObject", Ptr, hbmColor)
+		return -3
+
+	return 0
+}
+
+;#####################################################################################
+
 PaintDesktop(hdc)
 {
 	return DllCall("PaintDesktop", A_PtrSize ? "UPtr" : "UInt", hdc)
