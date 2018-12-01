@@ -770,7 +770,6 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate := 0) {
 ; Function:				Gdip_BitmapFromBase64
 ; Description:			Creates a bitmap from a Base64 encoded string
 ;
-; pBitmap				Pointer to a bitmap
 ; Base64				ByRef variable. Base64 encoded string. Immutable, ByRef to avoid performance overhead of passing long strings.
 ;
 ; return				If the function succeeds, the return value is a pointer to a bitmap, otherwise:
