@@ -779,21 +779,23 @@ Gdip_BitmapFromBRA(ByRef BRAFromMemIn, File, Alternate := 0) {
 	If !(BRAFromMemIn)
 		Return -1
 	Headers := StrSplit(StrGet(&BRAFromMemIn, 256, "CP0"), "`n")
-	Header := StrSplit(Headers.1, "|")
-	If (Header.Length() != 4) || (Header.2 != "BRA!")
+	Header := StrSplit(Headers[1], "|")
+	HeaderLength := (A_AhkVersion < "2") ? Header.Length() : Header.Length
+	If (HeaderLength != 4) || (Header[2] != "BRA!")
 		Return -2
-	_Info := StrSplit(Headers.2, "|")
-	If (_Info.Length() != 3)
+	_Info := StrSplit(Headers[2], "|")
+	_InfoLength := (A_AhkVersion < "2") ? _Info.Length() : _Info.Length
+	If (_InfoLength != 3)
 		Return -3
-	OffsetTOC := StrPut(Headers.1, "CP0") + StrPut(Headers.2, "CP0") ;  + 2
-	OffsetData := _Info.2
+	OffsetTOC := StrPut(Headers[1], "CP0") + StrPut(Headers[2], "CP0") ;  + 2
+	OffsetData := _Info[2]
 	SearchIndex := Alternate ? 1 : 2
 	TOC := StrGet(&BRAFromMemIn + OffsetTOC, OffsetData - OffsetTOC - 1, "CP0")
 	RX1 := A_AhkVersion < "2" ? "mi`nO)^" : "mi`n)^"
 	Offset := Size := 0
 	If RegExMatch(TOC, RX1 . (Alternate ? File "\|.+?" : "\d+\|" . File) . "\|(\d+)\|(\d+)$", FileInfo) {
-		Offset := OffsetData + FileInfo.1
-		Size := FileInfo.2
+		Offset := OffsetData + FileInfo[1]
+		Size := FileInfo[2]
 	}
 	If (Size = 0)
 		Return -4
@@ -1061,13 +1063,14 @@ Gdip_DrawLines(pGraphics, pPen, Points)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 	Points := StrSplit(Points, "|")
-	VarSetCapacity(PointF, 8*Points.Length())
+	PointsLength := (A_AhkVersion < "2") ? Points.Length() : Points.Length
+	VarSetCapacity(PointF, 8*PointsLength)
 	for eachPoint, Point in Points
 	{
 		Coord := StrSplit(Point, ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
-	return DllCall("gdiplus\GdipDrawLines", Ptr, pGraphics, Ptr, pPen, Ptr, &PointF, "int", Points.Length())
+	return DllCall("gdiplus\GdipDrawLines", Ptr, pGraphics, Ptr, pPen, Ptr, &PointF, "int", PointsLength)
 }
 
 ;#####################################################################################
@@ -1152,13 +1155,14 @@ Gdip_FillPolygon(pGraphics, pBrush, Points, FillMode:=0)
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
 	Points := StrSplit(Points, "|")
-	VarSetCapacity(PointF, 8*Points.Length())
+	PointsLength := (A_AhkVersion < "2") ? Points.Length() : Points.Length
+	VarSetCapacity(PointF, 8*PointsLength)
 	For eachPoint, Point in Points
 	{
 		Coord := StrSplit(Point, ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
-	return DllCall("gdiplus\GdipFillPolygon", Ptr, pGraphics, Ptr, pBrush, Ptr, &PointF, "int", Points.Length(), "int", FillMode)
+	return DllCall("gdiplus\GdipFillPolygon", Ptr, pGraphics, Ptr, pBrush, Ptr, &PointF, "int", PointsLength, "int", FillMode)
 }
 
 ;#####################################################################################
@@ -1277,7 +1281,8 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
 	Points := StrSplit(Points, "|")
-	VarSetCapacity(PointF, 8*Points.Length())
+	PointsLength := (A_AhkVersion < "2") ? Points.Length() : Points.Length
+	VarSetCapacity(PointF, 8*PointsLength)
 	For eachPoint, Point in Points
 	{
 		Coord := StrSplit(Point, ",")
@@ -1300,7 +1305,7 @@ Gdip_DrawImagePointsRect(pGraphics, pBitmap, Points, sx:="", sy:="", sw:="", sh:
 				, Ptr, pGraphics
 				, Ptr, pBitmap
 				, Ptr, &PointF
-				, "int", Points.Length()
+				, "int", PointsLength
 				, "float", sx
 				, "float", sy
 				, "float", sw
@@ -2215,7 +2220,7 @@ Gdip_TextToGraphics(pGraphics, Text, Options, Font:="Arial", Width:="", Height:=
 	RegExMatch(Options, pattern_opts "R(\d)", Rendering)
 	RegExMatch(Options, pattern_opts "S(\d+)(p*)", Size)
 
-	if Colour && !Gdip_DeleteBrush(Gdip_CloneBrush(Colour[2]))
+	if Colour && IsInteger(Colour[2]) && !Gdip_DeleteBrush(Gdip_CloneBrush(Colour[2]))
 		PassBrush := 1, pBrush := Colour[2]
 
 	if !(IWidth && IHeight) && ((xpos && xpos[2]) || (ypos && ypos[2]) || (Width && Width[2]) || (Height && Height[2]) || (Size && Size[2]))
@@ -2426,14 +2431,15 @@ Gdip_AddPathPolygon(pPath, Points)
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
 	Points := StrSplit(Points, "|")
-	VarSetCapacity(PointF, 8*Points.Length())
+	PointsLength := (A_AhkVersion < "2") ? Points.Length() : Points.Length
+	VarSetCapacity(PointF, 8*PointsLength)
 	for eachPoint, Point in Points
 	{
 		Coord := StrSplit(Point, ",")
 		NumPut(Coord[1], PointF, 8*(A_Index-1), "float"), NumPut(Coord[2], PointF, (8*(A_Index-1))+4, "float")
 	}
 
-	return DllCall("gdiplus\GdipAddPathPolygon", Ptr, pPath, Ptr, &PointF, "int", Points.Length())
+	return DllCall("gdiplus\GdipAddPathPolygon", Ptr, pPath, Ptr, &PointF, "int", PointsLength)
 }
 
 Gdip_DeletePath(pPath)

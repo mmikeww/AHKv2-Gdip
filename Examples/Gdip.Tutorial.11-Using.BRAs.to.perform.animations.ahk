@@ -68,7 +68,8 @@ If !(FileObject := FileOpen("Gdip.tutorial.file-fish.bra", "r")) {
 	MsgBox "Error opening Gdip.tutorial.file-fish.bra for reading"
 	ExitApp
 }
-FileObject.RawRead(BRA, FileObject.Length)
+FileObjLength := (A_AhkVersion < "2") ? FileObject.Length() : FileObject.Length
+FileObject.RawRead(BRA, FileObjLength)
 FileObject.Close()
 
 ; Get a count of the number of files contained in the BRA
@@ -156,7 +157,7 @@ RC := StrSplit(RC, "|")
 ; I can now create a gradient brush for the text (to be used with another new addition to Gdip_TextToGraphics
 ; I am going to create it using the y and height we just got. The width doesnt matter as I will make the brush the same width as the gui
 ; so no matter how wide the writing it will still be within the brushes width
-pTextBrush := Gdip_CreateLineBrushFromRect(0, RC.2, WinWidth, RC.4, 0xffDDF7F7, 0x774549DF)
+pTextBrush := Gdip_CreateLineBrushFromRect(0, RC[2], WinWidth, RC[4], 0xffDDF7F7, 0x774549DF)
 
 ; In the options for Gdip_TextToGraphics we can now specify the brush we just created rather than just specifying the argb as we normally do
 ; We literally pass the pointer to the brush (so our brush variable) after the c
@@ -209,7 +210,7 @@ RC := Gdip_TextToGraphics(G, Time, Options, Font, WinWidth, WinHeight, 1)
 RC := StrSplit(RC, "|")
 
 ; We can then clip a rectangle so that we only need to redraw what is contained within it
-Gdip_SetClipRect(G, RC.1, RC.2, RC.3, RC.4)
+Gdip_SetClipRect(G, RC[1], RC[2], RC[3], RC[4])
 
 ; Gdip_SetCompositingMode to 1, which overwrites anything inside the rectangle
 Gdip_SetCompositingMode(G, 1)
@@ -239,14 +240,16 @@ return
 BRA_GetCount(ByRef BRAFromMemIn) {
 	If !(BRAFromMemIn)
 		Return -1
-   Headers := StrSplit(StrGet(&BRAFromMemIn, 256, "CP0"), "`n")
-   Header := StrSplit(Headers.1, "|")
-   If (Header.Length() != 4) || (Header.2 != "BRA!")
+	Headers := StrSplit(StrGet(&BRAFromMemIn, 256, "CP0"), "`n")
+	Header := StrSplit(Headers[1], "|")
+	HeaderLength := (A_AhkVersion < "2") ? Header.Length() : Header.Length
+	If (HeaderLength != 4) || (Header[2] != "BRA!")
 		Return -2
-   Info := StrSplit(Headers.2, "|")
-	If (Info.Length() != 3)
+	Info := StrSplit(Headers[2], "|")
+	InfoLength := (A_AhkVersion < "2") ? Info.Length() : Info.Length
+	If (InfoLength != 3)
 		Return -3
-   Return (Info.1 + 0)
+	Return (Info[1] + 0)
 }
 
 ;######################################################################

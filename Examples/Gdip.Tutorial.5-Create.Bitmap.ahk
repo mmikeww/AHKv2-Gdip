@@ -71,7 +71,7 @@ Lines := "180,200,130,220|180,190,130,195|220,200,270,220|220,190,270,195"
 for k,v in StrSplit(Lines, "|")
 {
 	Pos := StrSplit(v, ",")
-	Gdip_DrawLine(G, pPen, Pos.1, Pos.2, Pos.3, Pos.4)
+	Gdip_DrawLine(G, pPen, Pos[1], Pos[2], Pos[3], Pos[4])
 }
 ; Delete the pen
 Gdip_DeletePen(pPen)
