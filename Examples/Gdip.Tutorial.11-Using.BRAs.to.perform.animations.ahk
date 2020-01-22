@@ -133,7 +133,7 @@ Gdip_FillRoundedRectangle(G, pBrush, 0, 0, WinWidth, WinHeight, 20)
 Font := "Arial"
 ; Next we can check that the user actually has the font that we wish them to use
 ; If they do not then we can do something about it. I choose to give a wraning and exit!
-If !Gdip_FontFamilyCreate(Font)
+If !(hFamily := Gdip_FontFamilyCreate(Font))
 {
    MsgBox "The font you have specified does not exist on the system"
    ExitApp
