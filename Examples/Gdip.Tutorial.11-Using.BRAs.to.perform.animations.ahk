@@ -341,7 +341,7 @@ return
 ;#######################################################################
 
 ; Our function for WM_LBUTTONDOWN allowing us to drag. works on last found window
-WM_LBUTTONDOWN()
+WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 {
 	PostMessage 0xA1, 2
 }
@@ -349,7 +349,7 @@ WM_LBUTTONDOWN()
 ;#######################################################################
 
 ; On Exit clean up resources
-AppExit() {
+AppExit(ExitReason, ExitCode) {
 global
 ; Select the object back into the hdc
 SelectObject(hdc, obm)

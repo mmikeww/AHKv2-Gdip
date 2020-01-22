@@ -59,7 +59,7 @@ Return
 
 Slider_Change(GuiCtrlObj, Info)
 {
-	Gdip_SetProgress(GuiCtrlObj.Gui.Control["ProgressBar"], GuiCtrlObj.Value, 0xff0993ea, 0xffbde5ff, GuiCtrlObj.Value "`%")
+	Gdip_SetProgress(GuiCtrlObj.Gui["ProgressBar"], GuiCtrlObj.Value, 0xff0993ea, 0xffbde5ff, GuiCtrlObj.Value "`%")
 }
 
 ;#######################################################################
@@ -114,13 +114,13 @@ Gdip_SetProgress(ByRef Variable, Percentage, Foreground, Background:=0x00000000,
 
 ;#######################################################################
 
-Gui_Close() {
+Gui_Close(GuiObj) {
 GuiClose:
    ExitApp
 return
 }
 
-ExitFunc()
+ExitFunc(ExitReason, ExitCode)
 {
    global
    ; gdi+ may now be shutdown

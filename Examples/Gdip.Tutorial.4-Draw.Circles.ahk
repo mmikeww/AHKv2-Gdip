@@ -103,7 +103,7 @@ Return
 
 ;#######################################################################
 
-ExitFunc()
+ExitFunc(ExitReason, ExitCode)
 {
    global
    ; Select the object back into the hdc

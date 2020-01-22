@@ -90,7 +90,7 @@ return
 ;#######################################################################
 
 ; This is called on left click to allow to drag
-WM_LBUTTONDOWN()
+WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 {
    PostMessage 0xA1, 2
 }
@@ -102,7 +102,7 @@ Esc::
    ExitApp
 return
 
-ExitFunc()
+ExitFunc(ExitReason, ExitCode)
 {
    global
    Gdip_DisposeImage(pBitmapOut), Gdip_DisposeImage(pBitmap)

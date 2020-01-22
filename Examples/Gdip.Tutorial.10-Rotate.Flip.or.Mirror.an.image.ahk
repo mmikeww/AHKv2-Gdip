@@ -69,10 +69,10 @@ ButtonGo_Click(GuiCtrlObj, Info)
 ;Gui, 1: Submit, NoHide
 GuiCtrlObj.Gui.Opt("+OwnDialogs")
 GuiCtrlObj.Gui.Submit(false)
-File := GuiCtrlObj.Gui.Control["File"].Value
-Angle := GuiCtrlObj.Gui.Control["Angle"].Value
-Horizontal := GuiCtrlObj.Gui.Control["Horizontal"].Value
-Vertical := GuiCtrlObj.Gui.Control["Vertical"].Value
+File := GuiCtrlObj.Gui["File"].Value
+Angle := GuiCtrlObj.Gui["Angle"].Value
+Horizontal := GuiCtrlObj.Gui["Horizontal"].Value
+Vertical := GuiCtrlObj.Gui["Vertical"].Value
 
 ; If the file in the edit field is not a valid image then return
 If !pBitmap := Gdip_CreateBitmapFromFile(File)
@@ -176,14 +176,13 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 ;#####################################################################
 
 ; If the user closes the gui or closes the program then we want to shut down gdi+ and exit the application
-Esc::
-Gui_Close() {
+Gui_Close(GuiObj) {
 GuiClose:
    ExitApp
 return
 }
 
-ExitFunc()
+ExitFunc(ExitReason, ExitCode)
 {
    global
    Gdip_Shutdown(pToken)
