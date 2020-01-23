@@ -6,9 +6,7 @@ Support for AHK v1.0 is dropped (find the original `Gdip_All.ahk` library if you
 See the [commit history](https://github.com/mmikeww/AHKv2-Gdip/commits/master) to see the changes made.
 
 # Examples
-All of the tutorial files in the `/Examples/` subfolder work successfully on AHK v2.  
-
-If you try to run these example files on AHK v1, they will fail. However, the v1 code is still in the files, just simply commented out. Search the example files for "AHK v1" and swap the commented lines to get them working.  
+See the appropriate Examples folder for usage examples
 
 # Usage
 All of the Gdip_*() functions use the same syntax as before, so no changes should be required, with one exception:  
