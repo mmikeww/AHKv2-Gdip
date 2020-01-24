@@ -1936,16 +1936,17 @@ Gdip_CreateBitmapFromClipboard()
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
 
-	if !DllCall("OpenClipboard", Ptr, 0)
-		return -1
 	if !DllCall("IsClipboardFormatAvailable", "uint", 8)
 		return -2
-	if !hBitmap := DllCall("GetClipboardData", "uint", 2, Ptr)
+	if !DllCall("OpenClipboard", Ptr, 0)
+		return -1
+	hBitmap := DllCall("GetClipboardData", "uint", 2, Ptr)
+	if !DllCall("CloseClipboard")
+		return -5
+	if !hBitmap
 		return -3
 	if !pBitmap := Gdip_CreateBitmapFromHBITMAP(hBitmap)
 		return -4
-	if !DllCall("CloseClipboard")
-		return -5
 	DeleteObject(hBitmap)
 	return pBitmap
 }
