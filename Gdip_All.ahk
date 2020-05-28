@@ -542,7 +542,7 @@ DestroyIcon(hIcon)
 ;#####################################################################################
 
 ; Function:				GetIconDimensions
-; Description:			Retrieves a given icon/cursor's width and height 
+; Description:			Retrieves a given icon/cursor's width and height
 ;
 ; hIcon					Pointer to an icon or cursor
 ; Width					ByRef variable. This variable is set to the icon's width
@@ -561,7 +561,7 @@ GetIconDimensions(hIcon, ByRef Width, ByRef Height) {
 
 	if !DllCall("user32\GetIconInfo", Ptr, hIcon, Ptr, &ICONINFO)
 		return -1
-	
+
 	hbmMask := NumGet(&ICONINFO, 16, Ptr)
 	hbmColor := NumGet(&ICONINFO, 16 + A_PtrSize, Ptr)
 	VarSetCapacity(BITMAP, size, 0)
@@ -574,7 +574,7 @@ GetIconDimensions(hIcon, ByRef Width, ByRef Height) {
 
 	if !DllCall("gdi32\DeleteObject", Ptr, hbmMask)
 		return -2
-	
+
 	if !DllCall("gdi32\DeleteObject", Ptr, hbmColor)
 		return -3
 
@@ -1922,6 +1922,128 @@ Gdip_CreateHBITMAPFromBitmap(pBitmap, Background:=0xffffffff)
 
 ;#####################################################################################
 
+Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
+	; struct BITMAP - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap
+	DllCall("GetObject"
+				,    "ptr", hBitmap
+				,    "int", VarSetCapacity(dib, 76+2*(A_PtrSize=8?4:0)+2*A_PtrSize)
+				,    "ptr", &dib) ; sizeof(DIBSECTION) = 84, 104
+		, width  := NumGet(dib, 4, "uint")
+		, height := NumGet(dib, 8, "uint")
+		, bpp    := NumGet(dib, 18, "ushort")
+
+	; Fallback to built-in method if pixels are not 32-bit ARGB.
+	if (bpp != 32) { ; This built-in version is 120% faster but ignores transparency.
+		DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", "ptr", hBitmap, "ptr", 0, "ptr*", pBitmap)
+		return pBitmap
+	}
+
+	; Create a handle to a device context and associate the image.
+	hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")             ; Creates a memory DC compatible with the current screen.
+	obm := DllCall("SelectObject", "ptr", hdc, "ptr", hBitmap, "ptr") ; Put the (hBitmap) image onto the device context.
+
+	; Create a device independent bitmap with negative height. All DIBs use the screen pixel format (pARGB).
+	; Use hbm to buffer the image such that top-down and bottom-up images are mapped to this top-down buffer.
+	cdc := DllCall("CreateCompatibleDC", "ptr", hdc, "ptr")
+	VarSetCapacity(bi, 40, 0)               ; sizeof(bi) = 40
+		, NumPut(      40, bi,  0,   "uint") ; Size
+		, NumPut(   width, bi,  4,   "uint") ; Width
+		, NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
+		, NumPut(       1, bi, 12, "ushort") ; Planes
+		, NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
+	hbm := DllCall("CreateDIBSection", "ptr", cdc, "ptr", &bi, "uint", 0
+				, "ptr*", pBits  ; pBits is the pointer to (top-down) pixel values.
+				, "ptr", 0, "uint", 0, "ptr")
+	ob2 := DllCall("SelectObject", "ptr", cdc, "ptr", hbm, "ptr")
+
+	; This is the 32-bit ARGB pBitmap (different from an hBitmap) that will receive the final converted pixels.
+	DllCall("gdiplus\GdipCreateBitmapFromScan0"
+				, "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap)
+
+	; Create a Scan0 buffer pointing to pBits. The buffer has pixel format pARGB.
+	VarSetCapacity(Rect, 16, 0)              ; sizeof(Rect) = 16
+		, NumPut(  width, Rect,  8,   "uint") ; Width
+		, NumPut( height, Rect, 12,   "uint") ; Height
+	VarSetCapacity(BitmapData, 16+2*A_PtrSize, 0)     ; sizeof(BitmapData) = 24, 32
+		, NumPut(     width, BitmapData,  0,   "uint") ; Width
+		, NumPut(    height, BitmapData,  4,   "uint") ; Height
+		, NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
+		, NumPut(   0xE200B, BitmapData, 12,    "int") ; PixelFormat
+		, NumPut(     pBits, BitmapData, 16,    "ptr") ; Scan0
+
+	; Use LockBits to create a writable buffer that converts pARGB to ARGB.
+	DllCall("gdiplus\GdipBitmapLockBits"
+				,    "ptr", pBitmap
+				,    "ptr", &Rect
+				,   "uint", 6            ; ImageLockMode.UserInputBuffer | ImageLockMode.WriteOnly
+				,    "int", 0xE200B      ; Format32bppPArgb
+				,    "ptr", &BitmapData) ; Contains the pointer (pBits) to the hbm.
+
+	; Copies the image (hBitmap) to a top-down bitmap. Removes bottom-up-ness if present.
+	DllCall("gdi32\BitBlt"
+				, "ptr", cdc, "int", 0, "int", 0, "int", width, "int", height
+				, "ptr", hdc, "int", 0, "int", 0, "uint", 0x00CC0020) ; SRCCOPY
+
+	; Convert the pARGB pixels copied into the device independent bitmap (hbm) to ARGB.
+	DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
+
+	; Cleanup the buffer and device contexts.
+	DllCall("SelectObject", "ptr", cdc, "ptr", ob2)
+	DllCall("DeleteObject", "ptr", hbm)
+	DllCall("DeleteDC",     "ptr", cdc)
+	DllCall("SelectObject", "ptr", hdc, "ptr", obm)
+	DllCall("DeleteDC",     "ptr", hdc)
+
+	return pBitmap
+}
+
+;#####################################################################################
+
+Gdip_CreateARGBHBITMAPFromBitmap(ByRef pBitmap) {
+   ; This version is about 25% faster than Gdip_CreateHBITMAPFromBitmap().
+	; Get Bitmap width and height.
+	DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width)
+	DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height)
+
+	; Convert the source pBitmap into a hBitmap manually.
+	; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
+	hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
+	VarSetCapacity(bi, 40, 0)               ; sizeof(bi) = 40
+		, NumPut(      40, bi,  0,   "uint") ; Size
+		, NumPut(   width, bi,  4,   "uint") ; Width
+		, NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
+		, NumPut(       1, bi, 12, "ushort") ; Planes
+		, NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
+	hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits, "ptr", 0, "uint", 0, "ptr")
+	obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
+
+	; Transfer data from source pBitmap to an hBitmap manually.
+	VarSetCapacity(Rect, 16, 0)              ; sizeof(Rect) = 16
+		, NumPut(  width, Rect,  8,   "uint") ; Width
+		, NumPut( height, Rect, 12,   "uint") ; Height
+	VarSetCapacity(BitmapData, 16+2*A_PtrSize, 0)     ; sizeof(BitmapData) = 24, 32
+		, NumPut(     width, BitmapData,  0,   "uint") ; Width
+		, NumPut(    height, BitmapData,  4,   "uint") ; Height
+		, NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
+		, NumPut(   0xE200B, BitmapData, 12,    "int") ; PixelFormat
+		, NumPut(     pBits, BitmapData, 16,    "ptr") ; Scan0
+	DllCall("gdiplus\GdipBitmapLockBits"
+				,    "ptr", pBitmap
+				,    "ptr", &Rect
+				,   "uint", 5            ; ImageLockMode.UserInputBuffer | ImageLockMode.ReadOnly
+				,    "int", 0xE200B      ; Format32bppPArgb
+				,    "ptr", &BitmapData) ; Contains the pointer (pBits) to the hbm.
+	DllCall("gdiplus\GdipBitmapUnlockBits", "ptr", pBitmap, "ptr", &BitmapData)
+
+	; Cleanup the hBitmap and device contexts.
+	DllCall("SelectObject", "ptr", hdc, "ptr", obm)
+	DllCall("DeleteDC",     "ptr", hdc)
+
+	return hbm
+}
+
+;#####################################################################################
+
 Gdip_CreateBitmapFromHICON(hIcon)
 {
 	pBitmap := 0
@@ -2984,7 +3106,7 @@ MDMF_EnumProc(HMON, HDC, PRECT, ObjectAddr) {
 ; Retrieves the display monitor that has the largest area of intersection with a specified window.
 ; The following flag values determine the function's return value if the window does not intersect any display monitor:
 ;    MONITOR_DEFAULTTONULL    = 0 - Returns NULL.
-;    MONITOR_DEFAULTTOPRIMARY = 1 - Returns a handle to the primary display monitor. 
+;    MONITOR_DEFAULTTOPRIMARY = 1 - Returns a handle to the primary display monitor.
 ;    MONITOR_DEFAULTTONEAREST = 2 - Returns a handle to the display monitor that is nearest to the window.
 ; ======================================================================================================================
 MDMF_FromHWND(HWND, Flag := 0) {
@@ -2996,7 +3118,7 @@ MDMF_FromHWND(HWND, Flag := 0) {
 ; The following flag values determine the function's return value if the point is not contained within any
 ; display monitor:
 ;    MONITOR_DEFAULTTONULL    = 0 - Returns NULL.
-;    MONITOR_DEFAULTTOPRIMARY = 1 - Returns a handle to the primary display monitor. 
+;    MONITOR_DEFAULTTOPRIMARY = 1 - Returns a handle to the primary display monitor.
 ;    MONITOR_DEFAULTTONEAREST = 2 - Returns a handle to the display monitor that is nearest to the point.
 ; ======================================================================================================================
 MDMF_FromPoint(ByRef X := "", ByRef Y := "", Flag := 0) {
@@ -3017,7 +3139,7 @@ MDMF_FromPoint(ByRef X := "", ByRef Y := "", Flag := 0) {
 ; The following flag values determine the function's return value if the rectangle does not intersect any
 ; display monitor:
 ;    MONITOR_DEFAULTTONULL    = 0 - Returns NULL.
-;    MONITOR_DEFAULTTOPRIMARY = 1 - Returns a handle to the primary display monitor. 
+;    MONITOR_DEFAULTTOPRIMARY = 1 - Returns a handle to the primary display monitor.
 ;    MONITOR_DEFAULTTONEAREST = 2 - Returns a handle to the display monitor that is nearest to the rectangle.
 ; ======================================================================================================================
 MDMF_FromRect(X, Y, W, H, Flag := 0) {
@@ -3044,4 +3166,3 @@ MDMF_GetInfo(HMON) {
 		      , Primary:   NumGet(MIEX, 36, "UInt")} ; contains a non-zero value for the primary monitor.
 	Return False
 }
-
