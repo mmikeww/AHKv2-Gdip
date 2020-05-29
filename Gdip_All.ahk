@@ -1934,7 +1934,7 @@ Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
 
 	; Fallback to built-in method if pixels are not 32-bit ARGB.
 	if (bpp != 32) { ; This built-in version is 120% faster but ignores transparency.
-		DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", "ptr", hBitmap, "ptr", 0, "ptr*", pBitmap)
+		DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", "ptr", hBitmap, "ptr", 0, "ptr*", pBitmap:=0)
 		return pBitmap
 	}
 
@@ -1952,13 +1952,13 @@ Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
 		, NumPut(       1, bi, 12, "ushort") ; Planes
 		, NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
 	hbm := DllCall("CreateDIBSection", "ptr", cdc, "ptr", &bi, "uint", 0
-				, "ptr*", pBits  ; pBits is the pointer to (top-down) pixel values.
+				, "ptr*", pBits:=0  ; pBits is the pointer to (top-down) pixel values.
 				, "ptr", 0, "uint", 0, "ptr")
 	ob2 := DllCall("SelectObject", "ptr", cdc, "ptr", hbm, "ptr")
 
 	; This is the 32-bit ARGB pBitmap (different from an hBitmap) that will receive the final converted pixels.
 	DllCall("gdiplus\GdipCreateBitmapFromScan0"
-				, "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap)
+				, "int", width, "int", height, "int", 0, "int", 0x26200A, "ptr", 0, "ptr*", pBitmap:=0)
 
 	; Create a Scan0 buffer pointing to pBits. The buffer has pixel format pARGB.
 	VarSetCapacity(Rect, 16, 0)              ; sizeof(Rect) = 16
@@ -2002,8 +2002,8 @@ Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
 Gdip_CreateARGBHBITMAPFromBitmap(ByRef pBitmap) {
    ; This version is about 25% faster than Gdip_CreateHBITMAPFromBitmap().
 	; Get Bitmap width and height.
-	DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width)
-	DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height)
+	DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
+	DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
 
 	; Convert the source pBitmap into a hBitmap manually.
 	; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
@@ -2014,7 +2014,7 @@ Gdip_CreateARGBHBITMAPFromBitmap(ByRef pBitmap) {
 		, NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
 		, NumPut(       1, bi, 12, "ushort") ; Planes
 		, NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
-	hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits, "ptr", 0, "uint", 0, "ptr")
+	hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits:=0, "ptr", 0, "uint", 0, "ptr")
 	obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
 	; Transfer data from source pBitmap to an hBitmap manually.
