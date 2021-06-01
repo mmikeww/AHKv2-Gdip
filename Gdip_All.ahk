@@ -507,7 +507,7 @@ CreateDIBSection(w, h, hdc:="", bpp:=32, ByRef ppvBits:=0)
 PrintWindow(hwnd, hdc, Flags:=0)
 {
 	Ptr := A_PtrSize ? "UPtr" : "UInt"
-
+	Flags |= 2	;PW_RENDERFULLCONTENT = $00000002
 	return DllCall("PrintWindow", Ptr, hwnd, Ptr, hdc, "uint", Flags)
 }
 
