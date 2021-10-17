@@ -1908,18 +1908,18 @@ Gdip_CreateHBITMAPFromBitmap(pBitmap, Background:=0xffffffff)
 
 ;#####################################################################################
 
-Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
+Gdip_CreateARGBBitmapFromHBITMAP(hBitmap) {
+	; struct DIBSECTION - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-dibsection
 	; struct BITMAP - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmap
-	DllCall("GetObject"
-				,    "ptr", hBitmap
-				,    "int", VarSetCapacity(dib, 76+2*(A_PtrSize=8?4:0)+2*A_PtrSize)
-				,    "ptr", &dib) ; sizeof(DIBSECTION) = 84, 104
+	VarSetCapacity(dib, size := 64+5*A_PtrSize) ; sizeof(DIBSECTION) = 84, 104
+	DllCall("GetObject", "ptr", hBitmap, "int", size, "ptr", &dib)
 		, width  := NumGet(dib, 4, "uint")
 		, height := NumGet(dib, 8, "uint")
 		, bpp    := NumGet(dib, 18, "ushort")
+		, pBits  := NumGet(dib, A_PtrSize = 4 ? 20:24, "ptr")
 
-	; Fallback to built-in method if pixels are not 32-bit ARGB.
-	if (bpp != 32) { ; This built-in version is 120% faster but ignores transparency.
+	; Fallback to built-in method if pixels are not 32-bit ARGB or hBitmap is a device dependent bitmap.
+	if (pBits = 0 || bpp != 32) { ; This built-in version is 120% faster but ignores transparency.
 		DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", "ptr", hBitmap, "ptr", 0, "ptr*", pBitmap:=0)
 		return pBitmap
 	}
@@ -1930,16 +1930,16 @@ Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
 
 	; Create a device independent bitmap with negative height. All DIBs use the screen pixel format (pARGB).
 	; Use hbm to buffer the image such that top-down and bottom-up images are mapped to this top-down buffer.
+	; pBits is the pointer to (top-down) pixel values. The Scan0 will point to the pBits.
+	; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
 	cdc := DllCall("CreateCompatibleDC", "ptr", hdc, "ptr")
 	VarSetCapacity(bi, 40, 0)               ; sizeof(bi) = 40
-		, NumPut(      40, bi,  0,   "uint") ; Size
-		, NumPut(   width, bi,  4,   "uint") ; Width
-		, NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
-		, NumPut(       1, bi, 12, "ushort") ; Planes
-		, NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
-	hbm := DllCall("CreateDIBSection", "ptr", cdc, "ptr", &bi, "uint", 0
-				, "ptr*", pBits:=0  ; pBits is the pointer to (top-down) pixel values.
-				, "ptr", 0, "uint", 0, "ptr")
+		NumPut(      40, bi,  0,   "uint") ; Size
+		NumPut(   width, bi,  4,   "uint") ; Width
+		NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
+		NumPut(       1, bi, 12, "ushort") ; Planes
+		NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
+	hbm := DllCall("CreateDIBSection", "ptr", cdc, "ptr", &bi, "uint", 0, "ptr*", pBits:=0, "ptr", 0, "uint", 0, "ptr")
 	ob2 := DllCall("SelectObject", "ptr", cdc, "ptr", hbm, "ptr")
 
 	; This is the 32-bit ARGB pBitmap (different from an hBitmap) that will receive the final converted pixels.
@@ -1948,14 +1948,11 @@ Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
 
 	; Create a Scan0 buffer pointing to pBits. The buffer has pixel format pARGB.
 	VarSetCapacity(Rect, 16, 0)              ; sizeof(Rect) = 16
-		, NumPut(  width, Rect,  8,   "uint") ; Width
-		, NumPut( height, Rect, 12,   "uint") ; Height
+		NumPut(  width, Rect,  8,   "uint") ; Width
+		NumPut( height, Rect, 12,   "uint") ; Height
 	VarSetCapacity(BitmapData, 16+2*A_PtrSize, 0)     ; sizeof(BitmapData) = 24, 32
-		, NumPut(     width, BitmapData,  0,   "uint") ; Width
-		, NumPut(    height, BitmapData,  4,   "uint") ; Height
-		, NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
-		, NumPut(   0xE200B, BitmapData, 12,    "int") ; PixelFormat
-		, NumPut(     pBits, BitmapData, 16,    "ptr") ; Scan0
+		NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
+		NumPut(     pBits, BitmapData, 16,    "ptr") ; Scan0
 
 	; Use LockBits to create a writable buffer that converts pARGB to ARGB.
 	DllCall("gdiplus\GdipBitmapLockBits"
@@ -1985,8 +1982,8 @@ Gdip_CreateARGBBitmapFromHBITMAP(ByRef hBitmap) {
 
 ;#####################################################################################
 
-Gdip_CreateARGBHBITMAPFromBitmap(ByRef pBitmap) {
-   ; This version is about 25% faster than Gdip_CreateHBITMAPFromBitmap().
+Gdip_CreateARGBHBITMAPFromBitmap(pBitmap) {
+	; This version is about 25% faster than Gdip_CreateHBITMAPFromBitmap().
 	; Get Bitmap width and height.
 	DllCall("gdiplus\GdipGetImageWidth", "ptr", pBitmap, "uint*", width:=0)
 	DllCall("gdiplus\GdipGetImageHeight", "ptr", pBitmap, "uint*", height:=0)
@@ -1995,24 +1992,21 @@ Gdip_CreateARGBHBITMAPFromBitmap(ByRef pBitmap) {
 	; struct BITMAPINFOHEADER - https://docs.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
 	hdc := DllCall("CreateCompatibleDC", "ptr", 0, "ptr")
 	VarSetCapacity(bi, 40, 0)               ; sizeof(bi) = 40
-		, NumPut(      40, bi,  0,   "uint") ; Size
-		, NumPut(   width, bi,  4,   "uint") ; Width
-		, NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
-		, NumPut(       1, bi, 12, "ushort") ; Planes
-		, NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
+		NumPut(      40, bi,  0,   "uint") ; Size
+		NumPut(   width, bi,  4,   "uint") ; Width
+		NumPut( -height, bi,  8,    "int") ; Height - Negative so (0, 0) is top-left.
+		NumPut(       1, bi, 12, "ushort") ; Planes
+		NumPut(      32, bi, 14, "ushort") ; BitCount / BitsPerPixel
 	hbm := DllCall("CreateDIBSection", "ptr", hdc, "ptr", &bi, "uint", 0, "ptr*", pBits:=0, "ptr", 0, "uint", 0, "ptr")
 	obm := DllCall("SelectObject", "ptr", hdc, "ptr", hbm, "ptr")
 
 	; Transfer data from source pBitmap to an hBitmap manually.
 	VarSetCapacity(Rect, 16, 0)              ; sizeof(Rect) = 16
-		, NumPut(  width, Rect,  8,   "uint") ; Width
-		, NumPut( height, Rect, 12,   "uint") ; Height
+		NumPut(  width, Rect,  8,   "uint") ; Width
+		NumPut( height, Rect, 12,   "uint") ; Height
 	VarSetCapacity(BitmapData, 16+2*A_PtrSize, 0)     ; sizeof(BitmapData) = 24, 32
-		, NumPut(     width, BitmapData,  0,   "uint") ; Width
-		, NumPut(    height, BitmapData,  4,   "uint") ; Height
-		, NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
-		, NumPut(   0xE200B, BitmapData, 12,    "int") ; PixelFormat
-		, NumPut(     pBits, BitmapData, 16,    "ptr") ; Scan0
+		NumPut( 4 * width, BitmapData,  8,    "int") ; Stride
+		NumPut(     pBits, BitmapData, 16,    "ptr") ; Scan0
 	DllCall("gdiplus\GdipBitmapLockBits"
 				,    "ptr", pBitmap
 				,    "ptr", &Rect
